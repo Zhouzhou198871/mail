@@ -68,12 +68,13 @@ export default function LoginPage() {
         <div className="mb-8 flex flex-col items-center">
           <Link href="/" className="flex items-center gap-2.5">
             <Image
-              src="/logo.png"
+              src="https://raw.githubusercontent.com/Zhouzhou198871/pay/main/logo.png"
               alt="晴天支付"
               width={48}
               height={48}
               className="h-12 w-12 rounded-xl object-contain shadow-sm"
               priority
+              unoptimized
             />
             <span className="text-2xl font-bold text-slate-800">晴天支付</span>
           </Link>
