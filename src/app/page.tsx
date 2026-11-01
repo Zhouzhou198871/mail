@@ -6,12 +6,13 @@ export default function Home() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-sky-50 to-white px-4">
       <div className="flex flex-col items-center text-center">
         <Image
-          src="/logo.png"
+          src="https://raw.githubusercontent.com/Zhouzhou198871/pay/main/logo.png"
           alt="晴天支付"
           width={64}
           height={64}
           className="h-16 w-16 rounded-xl shadow-md object-contain mb-4"
           priority
+          unoptimized
         />
         <h1 className="text-4xl font-bold text-slate-900">晴天支付</h1>
         <p className="mt-3 max-w-md text-lg text-slate-600">
