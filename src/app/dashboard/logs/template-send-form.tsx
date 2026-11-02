@@ -15,6 +15,7 @@ export function TemplateSendForm({ defaultTo }: { defaultTo: string }) {
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     setResult(null);
     try {
@@ -25,13 +26,13 @@ export function TemplateSendForm({ defaultTo }: { defaultTo: string }) {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setResult({ ok: false, text: data.error || "发送失败" });
+        setResult({ ok: false, text: data.error || "发送失败，请检查收件邮箱和发件通道" });
         return;
       }
       setResult({ ok: true, text: data.id ? `发送成功 · ${data.id}` : "发送成功" });
       router.refresh();
     } catch {
-      setResult({ ok: false, text: "网络错误" });
+      setResult({ ok: false, text: "网络连接异常，请重试" });
     } finally {
       setLoading(false);
     }
@@ -54,7 +55,8 @@ export function TemplateSendForm({ defaultTo }: { defaultTo: string }) {
           required
           value={to}
           onChange={(e) => setTo(e.target.value)}
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+          disabled={loading}
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-50"
         />
       </div>
 
@@ -66,7 +68,9 @@ export function TemplateSendForm({ defaultTo }: { defaultTo: string }) {
               key={t.id}
               type="button"
               onClick={() => setTemplateId(t.id)}
-              className={`rounded-xl border px-2 py-2.5 text-left text-xs font-medium transition active:scale-[0.97] ${
+              disabled={loading}
+              aria-pressed={templateId === t.id}
+              className={`rounded-xl border px-2 py-2.5 text-left text-xs font-medium transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 ${
                 templateId === t.id
                   ? "border-sky-400 bg-sky-50 text-sky-800 shadow-sm"
                   : "border-slate-200 bg-white text-slate-600 hover:border-sky-200"
@@ -86,15 +90,16 @@ export function TemplateSendForm({ defaultTo }: { defaultTo: string }) {
         </div>
       )}
 
-      <button type="submit" disabled={loading} className="btn-primary w-full py-3">
-        {loading ? "发送中..." : "一键发送"}
+      <button type="submit" disabled={loading || !to.trim() || !selected} aria-busy={loading} className="btn-primary w-full py-3">
+        {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+        {loading ? "邮件发送中..." : "一键发送"}
       </button>
 
       {result && (
         <div
-          className={`rounded-xl px-3 py-2.5 text-sm ${
-            result.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
-          }`}
+          role="status"
+          aria-live="polite"
+          className={`rounded-xl px-3 py-2.5 text-sm ${result.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`}
         >
           {result.text}
         </div>
