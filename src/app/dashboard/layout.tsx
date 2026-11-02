@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 const nav = [
-  { href: "/dashboard", label: "概览", exact: true },
-  { href: "/dashboard/keys", label: "API 密钥", exact: false },
-  { href: "/dashboard/settings", label: "设置", exact: false },
+  { href: "/dashboard", label: "概览" },
+  { href: "/dashboard/keys", label: "API 密钥" },
+  { href: "/dashboard/logs", label: "发件日志" },
+  { href: "/dashboard/settings", label: "设置" },
 ];
 
 export default async function DashboardLayout({
@@ -24,11 +25,11 @@ export default async function DashboardLayout({
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <Link href="/dashboard" className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500 text-sm font-bold text-white">
-              晴
+              M
             </div>
             <div>
-              <p className="font-semibold text-slate-900">晴天支付</p>
-              <p className="text-xs text-slate-500">商户控制台</p>
+              <p className="font-semibold text-slate-900">MailHub</p>
+              <p className="text-xs text-slate-500">邮件调度中心</p>
             </div>
           </Link>
 

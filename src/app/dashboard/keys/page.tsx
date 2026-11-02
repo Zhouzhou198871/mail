@@ -24,7 +24,7 @@ export default async function KeysPage() {
     <div>
       <h1 className="text-2xl font-bold text-slate-900">API 密钥</h1>
       <p className="mt-2 text-slate-600">
-        生成与管理用于调用支付 API 的密钥。密钥仅在创建时展示一次明文。
+        用于调用发件接口（POST /api/v1/send）的 API 密钥。密钥仅在创建时展示一次明文。
       </p>
       <KeysClient
         initialKeys={keys.map((k) => ({

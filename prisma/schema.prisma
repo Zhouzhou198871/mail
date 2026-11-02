@@ -8,12 +8,13 @@ datasource db {
 }
 
 model User {
-  id                  String    @id @default(cuid())
-  email               String    @unique
-  notificationEmail   String?
-  receiveEmailAlerts  Boolean   @default(true)
-  createdAt           DateTime  @default(now())
-  apiKeys             ApiKey[]
+  id                 String     @id @default(cuid())
+  email              String     @unique
+  notificationEmail  String?
+  receiveEmailAlerts Boolean    @default(true)
+  createdAt          DateTime   @default(now())
+  apiKeys            ApiKey[]
+  emailLogs          EmailLog[]
 }
 
 model VerificationCode {
@@ -35,8 +36,23 @@ model ApiKey {
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime  @default(now())
   lastUsedAt DateTime?
-  status     String    @default("active") // active | revoked
+  status     String    @default("active")
 
   @@index([userId])
   @@index([keyHash])
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  to        String
+  subject   String
+  status    String
+  resendId  String?
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
 }

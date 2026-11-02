@@ -1,22 +1,16 @@
 import { NextResponse } from "next/server";
-import { verifyApiKeyFromRequest } from "@/lib/api-key";
 
-export async function GET(request: Request) {
-  const authResult = await verifyApiKeyFromRequest(request);
-  if (!authResult.ok) {
-    return NextResponse.json(
-      { code: 401, msg: authResult.error || "未授权", time: Date.now() },
-      { status: 401 }
-    );
-  }
-
-  return NextResponse.json({
-    code: 200,
-    msg: "晴天支付接口验证成功",
-    time: Date.now(),
-  });
+/** @deprecated 已迁移至 POST /api/v1/send */
+export async function GET() {
+  return NextResponse.json(
+    {
+      success: false,
+      error: "该接口已废弃，请使用 POST /api/v1/send",
+    },
+    { status: 410 }
+  );
 }
 
-export async function POST(request: Request) {
-  return GET(request);
+export async function POST() {
+  return GET();
 }

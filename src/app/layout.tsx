@@ -15,23 +15,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "晴天支付 - 现代化 API 支付接口服务平台",
-    template: "%s | 晴天支付",
+    default: "MailHub - 邮件调度中心",
+    template: "%s | MailHub",
   },
   description:
-    "晴天支付（Qingtian Pay）—— 清爽、可靠、开发者友好的支付 API 接口服务平台。提供安全的 API Key 管理、实时交易处理与完善的开发者工具。",
-  keywords: [
-    "晴天支付",
-    "Qingtian Pay",
-    "支付API",
-    "支付接口",
-    "API支付",
-    "开发者支付平台",
-  ],
-  authors: [{ name: "晴天支付" }],
+    "MailHub（邮件调度中心）—— 通过 API Key 极速发送邮件的开发者友好邮件网关。",
+  keywords: ["MailHub", "邮件API", "邮件调度", "Resend", "Transactional Email"],
+  authors: [{ name: "MailHub" }],
   openGraph: {
-    title: "晴天支付 - 现代化 API 支付接口服务平台",
-    description: "清爽、可靠、开发者友好的支付 API 接口服务平台",
+    title: "MailHub - 邮件调度中心",
+    description: "通过 API Key 极速发送邮件",
     type: "website",
     locale: "zh_CN",
   },

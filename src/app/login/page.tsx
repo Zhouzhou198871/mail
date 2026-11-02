@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -99,16 +98,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center">
           <Link href="/" className="flex items-center gap-2.5">
-            <Image
-              src="https://raw.githubusercontent.com/Zhouzhou198871/pay/main/logo.png"
-              alt="晴天支付"
-              width={48}
-              height={48}
-              className="h-12 w-12 rounded-xl object-contain shadow-sm"
-              priority
-              unoptimized
-            />
-            <span className="text-2xl font-bold text-slate-800">晴天支付</span>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-500 text-lg font-bold text-white shadow-sm">
+              M
+            </div>
+            <span className="text-2xl font-bold text-slate-800">MailHub</span>
           </Link>
           <p className="mt-3 text-sm text-slate-500">邮箱验证码登录 / 注册</p>
         </div>
