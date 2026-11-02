@@ -58,6 +58,7 @@ model EmailLog {
   subject   String
   status    String
   source    String   @default("panel")
+  siteName  String?
   resendId  String?
   error     String?
   createdAt DateTime @default(now())
@@ -65,4 +66,23 @@ model EmailLog {
   @@index([userId])
   @@index([createdAt])
   @@index([source])
+  @@index([siteName])
+}
+
+model SenderProvider {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   @default("resend")
+  apiKey    String
+  fromEmail String
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model SiteBinding {
+  id          String   @id @default(cuid())
+  siteName    String
+  domain      String
+  providerId  String?
+  createdAt   DateTime @default(now())
 }

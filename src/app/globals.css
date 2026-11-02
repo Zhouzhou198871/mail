@@ -30,6 +30,22 @@ body {
   @apply inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition duration-150 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
 }
 
+.stat-card {
+  @apply rounded-2xl border border-slate-100 bg-gradient-to-b from-white to-slate-50 px-3 py-4 text-center shadow-sm transition duration-150 hover:border-sky-200 hover:shadow-md active:scale-[0.98];
+}
+
+.stat-label {
+  @apply text-[11px] font-medium text-slate-500 sm:text-xs;
+}
+
+.stat-value {
+  @apply mt-1.5 text-2xl font-bold tracking-tight sm:text-3xl;
+}
+
+.stat-hint {
+  @apply mt-1 text-[10px] text-slate-400;
+}
+
 a,
 button {
   -webkit-tap-highlight-color: transparent;

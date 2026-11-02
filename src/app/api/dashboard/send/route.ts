@@ -3,11 +3,11 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { sendTransactionalEmail } from "@/lib/resend";
+import { MAIL_TEMPLATES, templateToHtml } from "@/lib/templates";
 
 const bodySchema = z.object({
   to: z.string().email("收件人邮箱格式不正确"),
-  subject: z.string().min(1, "主题不能为空").max(200),
-  html: z.string().min(1, "邮件内容不能为空"),
+  templateId: z.string().min(1),
 });
 
 export async function POST(request: Request) {
@@ -20,10 +20,7 @@ export async function POST(request: Request) {
   try {
     json = await request.json();
   } catch {
-    return NextResponse.json(
-      { success: false, error: "请求体必须是 JSON" },
-      { status: 400 }
-    );
+    return NextResponse.json({ success: false, error: "请求体必须是 JSON" }, { status: 400 });
   }
 
   const parsed = bodySchema.safeParse(json);
@@ -34,7 +31,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const { to, subject, html } = parsed.data;
+  const tpl = MAIL_TEMPLATES.find((t) => t.id === parsed.data.templateId);
+  if (!tpl) {
+    return NextResponse.json({ success: false, error: "模版不存在" }, { status: 400 });
+  }
+
+  const to = parsed.data.to;
+  const subject = tpl.subject;
+  const html = templateToHtml(tpl.body);
 
   try {
     const data = await sendTransactionalEmail({ to, subject, html });
@@ -50,6 +54,7 @@ export async function POST(request: Request) {
         subject,
         status: "sent",
         source: "panel",
+        siteName: "管理面板",
         resendId,
       },
     });
@@ -57,7 +62,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, id: resendId });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "发送失败";
-
     await prisma.emailLog
       .create({
         data: {
@@ -66,11 +70,11 @@ export async function POST(request: Request) {
           subject,
           status: "failed",
           source: "panel",
+          siteName: "管理面板",
           error: message.slice(0, 500),
         },
       })
       .catch(() => {});
-
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

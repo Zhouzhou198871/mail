@@ -12,7 +12,7 @@ const bodySchema = z.object({
 
 export async function POST(request: Request) {
   const authResult = await verifyApiKeyFromRequest(request);
-  if (!authResult.ok || !authResult.userId) {
+  if (!authResult.ok || !authResult.userId || !authResult.apiKeyId) {
     return NextResponse.json(
       { success: false, error: authResult.error || "未授权" },
       { status: 401 }
@@ -23,10 +23,7 @@ export async function POST(request: Request) {
   try {
     json = await request.json();
   } catch {
-    return NextResponse.json(
-      { success: false, error: "请求体必须是 JSON" },
-      { status: 400 }
-    );
+    return NextResponse.json({ success: false, error: "请求体必须是 JSON" }, { status: 400 });
   }
 
   const parsed = bodySchema.safeParse(json);
@@ -38,6 +35,12 @@ export async function POST(request: Request) {
   }
 
   const { to, subject, html } = parsed.data;
+
+  const key = await prisma.apiKey.findUnique({
+    where: { id: authResult.apiKeyId },
+    select: { name: true },
+  });
+  const siteName = key?.name || "API";
 
   try {
     const data = await sendTransactionalEmail({ to, subject, html });
@@ -53,6 +56,7 @@ export async function POST(request: Request) {
         subject,
         status: "sent",
         source: "api",
+        siteName,
         resendId,
       },
     });
@@ -60,7 +64,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, id: resendId });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "发送失败";
-
     await prisma.emailLog
       .create({
         data: {
@@ -69,14 +72,11 @@ export async function POST(request: Request) {
           subject,
           status: "failed",
           source: "api",
+          siteName,
           error: message.slice(0, 500),
         },
       })
       .catch(() => {});
-
-    return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
