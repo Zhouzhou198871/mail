@@ -12,19 +12,16 @@ export async function POST(req: NextRequest) {
     }
 
     const code = generateOTP();
-    saveOTP(email, code);
-
+    await saveOTP(email, code);
     await sendOTPEmail(email, code);
 
     return NextResponse.json({
       success: true,
       message: "验证码已发送，请查收邮件",
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[send-otp]", err);
-    return NextResponse.json(
-      { error: err?.message || "发送失败，请稍后重试" },
-      { status: 500 }
-    );
+    const message = err instanceof Error ? err.message : "发送失败，请稍后重试";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

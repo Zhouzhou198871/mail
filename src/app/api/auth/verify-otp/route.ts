@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "邮箱和验证码不能为空" }, { status: 400 });
     }
 
-    const result = verifyOTP(email, code);
+    const result = await verifyOTP(email, code);
     if (!result.ok) {
       return NextResponse.json({ error: result.message }, { status: 400 });
     }
@@ -31,11 +31,9 @@ export async function POST(req: NextRequest) {
       message: "登录成功",
       email,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[verify-otp]", err);
-    return NextResponse.json(
-      { error: err?.message || "验证失败" },
-      { status: 500 }
-    );
+    const message = err instanceof Error ? err.message : "验证失败";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
