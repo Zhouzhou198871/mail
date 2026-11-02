@@ -23,11 +23,11 @@ body {
 }
 
 .btn-primary {
-  @apply inline-flex items-center justify-center rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition duration-150 hover:bg-sky-600 hover:shadow-lg hover:shadow-sky-500/40 active:scale-[0.96] active:shadow-sm disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:active:scale-100;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/30 transition duration-150 hover:bg-sky-600 hover:shadow-lg hover:shadow-sky-500/40 active:scale-[0.97] active:shadow-sm disabled:cursor-not-allowed disabled:opacity-55 disabled:shadow-none disabled:active:scale-100;
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition duration-150 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition duration-150 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-55 disabled:active:scale-100;
 }
 
 .stat-card {
@@ -49,4 +49,29 @@ body {
 a,
 button {
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgb(14 165 233 / 28%);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
