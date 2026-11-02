@@ -9,6 +9,7 @@ export function DemoApiTester() {
   const [error, setError] = useState("");
 
   async function handleTest() {
+    if (loading || !apiKey.trim()) return;
     setLoading(true);
     setError("");
     setResult("");
@@ -26,7 +27,7 @@ export function DemoApiTester() {
       }
       setResult(JSON.stringify(data, null, 2));
     } catch {
-      setError("网络错误，请重试");
+      setError("网络连接异常，请重试");
     } finally {
       setLoading(false);
     }
@@ -40,27 +41,31 @@ export function DemoApiTester() {
         </label>
         <input
           type="password"
+          autoComplete="off"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           placeholder="sk_live_..."
-          className="w-full rounded-lg border border-slate-200 px-4 py-2.5 font-mono text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+          disabled={loading}
+          className="w-full rounded-lg border border-slate-200 px-4 py-2.5 font-mono text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-50"
         />
       </div>
       <button
         type="button"
         onClick={handleTest}
         disabled={loading || !apiKey.trim()}
+        aria-busy={loading}
         className="btn-primary"
       >
-        {loading ? "请求中..." : "测试接口"}
+        {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+        {loading ? "正在连接接口..." : "测试接口"}
       </button>
       {error && (
-        <pre className="overflow-x-auto rounded-lg bg-red-50 p-4 text-sm text-red-600">
+        <pre role="alert" aria-live="polite" className="overflow-x-auto rounded-lg bg-red-50 p-4 text-sm text-red-600">
           {error}
         </pre>
       )}
       {result && (
-        <pre className="overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-emerald-300">
+        <pre role="status" aria-live="polite" className="overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-emerald-300">
           {result}
         </pre>
       )}
