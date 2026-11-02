@@ -1,37 +1,31 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
-import { verifyOTP } from "@/lib/otp";
+import { verifyAdminCredentials } from "@/lib/admins";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
-      name: "email-otp",
+      name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        code: { label: "Code", type: "text" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.code) {
+        if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
         const email = String(credentials.email).toLowerCase().trim();
-        const code = String(credentials.code).trim();
+        const password = String(credentials.password);
 
-        const result = await verifyOTP(email, code);
-        if (!result.ok) {
+        if (!verifyAdminCredentials(email, password)) {
           return null;
         }
 
-        let user = await prisma.user.findUnique({
-          where: { email },
-        });
-
+        let user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
-          user = await prisma.user.create({
-            data: { email },
-          });
+          user = await prisma.user.create({ data: { email } });
         }
 
         return {
