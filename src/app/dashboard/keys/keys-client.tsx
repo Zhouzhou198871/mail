@@ -51,18 +51,16 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
   }
 
   async function handleRevoke(id: string, name: string) {
-    if (!confirm(`确定吊销「${name}」？吊销后不可恢复。`)) return;
+    if (!confirm(`确定删除「${name}」？删除后立即失效且不可恢复。`)) return;
     setError("");
     try {
       const res = await fetch(`/api/keys/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "吊销失败");
+        setError(data.error || "删除失败");
         return;
       }
-      setKeys((prev) =>
-        prev.map((k) => (k.id === id ? { ...k, status: "revoked" } : k))
-      );
+      setKeys((prev) => prev.filter((k) => k.id !== id));
     } catch {
       setError("网络错误");
     }
@@ -80,7 +78,6 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
 
   return (
     <div className="mt-5 space-y-4">
-      {/* Usage guide */}
       <div className="rounded-2xl border border-sky-100 bg-sky-50/80 p-4 text-sm text-slate-700">
         <p className="font-semibold text-sky-900">怎么调用？一句话说明</p>
         <p className="mt-1.5 leading-relaxed text-slate-600">
@@ -100,7 +97,6 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
         </pre>
       </div>
 
-      {/* Create */}
       <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
         <label className="mb-1.5 block text-xs font-medium text-slate-600">
           密钥昵称（必填，方便以后识别删除）
@@ -114,12 +110,7 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
             maxLength={40}
             className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
           />
-          <button
-            type="button"
-            onClick={handleCreate}
-            disabled={loading}
-            className="btn-primary shrink-0"
-          >
+          <button type="button" onClick={handleCreate} disabled={loading} className="btn-primary shrink-0">
             {loading ? "生成中..." : "生成新密钥"}
           </button>
         </div>
@@ -131,7 +122,7 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
       {plaintext && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <p className="text-sm font-semibold text-amber-900">请立即保存密钥（仅显示一次）</p>
-          <p className="mt-1 text-xs text-amber-800">关闭后无法再次查看完整密钥，请复制到对接网站配置里。</p>
+          <p className="mt-1 text-xs text-amber-800">关闭后无法再次查看完整密钥。</p>
           <code className="mt-3 block break-all rounded-xl bg-white px-3 py-2 font-mono text-sm text-slate-900">
             {plaintext}
           </code>
@@ -150,7 +141,6 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
         </div>
       )}
 
-      {/* Scrollable list */}
       <div className="max-h-[28rem] overflow-y-auto overscroll-contain rounded-2xl border border-slate-100">
         <ul className="divide-y divide-slate-50">
           {keys.length === 0 && (
@@ -173,24 +163,16 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <span
-                  className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                    k.status === "active"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-slate-100 text-slate-500"
-                  }`}
-                >
-                  {k.status === "active" ? "生效中" : "已吊销"}
+                <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                  生效中
                 </span>
-                {k.status === "active" && (
-                  <button
-                    type="button"
-                    onClick={() => handleRevoke(k.id, k.name)}
-                    className="rounded-lg px-2 py-1 text-sm text-rose-600 transition hover:bg-rose-50 active:scale-[0.97]"
-                  >
-                    吊销
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => handleRevoke(k.id, k.name)}
+                  className="rounded-lg px-2 py-1 text-sm text-rose-600 transition hover:bg-rose-50 active:scale-[0.97]"
+                >
+                  删除
+                </button>
               </div>
             </li>
           ))}

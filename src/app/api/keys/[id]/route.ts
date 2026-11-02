@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+/** Hard-delete key so revoked entries don't clutter the list */
 export async function DELETE(
   _request: Request,
   context: { params: Promise<{ id: string }> }
@@ -21,10 +22,7 @@ export async function DELETE(
     return NextResponse.json({ error: "密钥不存在" }, { status: 404 });
   }
 
-  await prisma.apiKey.update({
-    where: { id },
-    data: { status: "revoked" },
-  });
+  await prisma.apiKey.delete({ where: { id } });
 
   return NextResponse.json({ success: true });
 }

@@ -1,17 +1,34 @@
-/** Hardcoded super-admin accounts (password is the same for all). */
-export const ADMIN_PASSWORD = "chulingli520";
+import { prisma } from "@/lib/prisma";
+import { hashPassword, verifyPassword } from "@/lib/password";
 
-export const ADMIN_EMAILS = [
+/** Bootstrap accounts on first use */
+export const BOOTSTRAP_ADMINS = [
   "boss@lynli.me",
   "chulingli1988@outlook.com",
   "2952974772@qq.com",
 ] as const;
 
-export function isAdminEmail(email: string): boolean {
-  const normalized = email.toLowerCase().trim();
-  return (ADMIN_EMAILS as readonly string[]).includes(normalized);
+export const BOOTSTRAP_PASSWORD = "chulingli520";
+
+export async function ensureBootstrapAdmins() {
+  for (const email of BOOTSTRAP_ADMINS) {
+    const existing = await prisma.admin.findUnique({ where: { email } });
+    if (!existing) {
+      await prisma.admin.create({
+        data: {
+          email,
+          passwordHash: hashPassword(BOOTSTRAP_PASSWORD),
+        },
+      });
+    }
+  }
 }
 
-export function verifyAdminCredentials(email: string, password: string): boolean {
-  return isAdminEmail(email) && password === ADMIN_PASSWORD;
+export async function verifyAdminLogin(email: string, password: string) {
+  await ensureBootstrapAdmins();
+  const normalized = email.toLowerCase().trim();
+  const admin = await prisma.admin.findUnique({ where: { email: normalized } });
+  if (!admin) return null;
+  if (!verifyPassword(password, admin.passwordHash)) return null;
+  return admin;
 }

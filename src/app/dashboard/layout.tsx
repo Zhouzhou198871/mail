@@ -1,4 +1,4 @@
-import { auth, signOut } from "@/auth";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
@@ -26,24 +26,13 @@ export default async function DashboardLayout({
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-sm">
           <BrandLogo href="/dashboard" size={40} subtitle="邮件调度中心" />
 
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="hidden max-w-[180px] truncate rounded-full bg-slate-50 px-3 py-1 text-xs text-slate-500 sm:inline">
-              {session.user.email}
-            </span>
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/login" });
-              }}
-            >
-              <button
-                type="submit"
-                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 active:scale-[0.97]"
-              >
-                退出
-              </button>
-            </form>
-          </div>
+          <Link
+            href="/dashboard/account"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 active:scale-[0.97]"
+          >
+            <span aria-hidden>👤</span>
+            个人中心
+          </Link>
         </div>
 
         <div className="mb-3 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-sm">

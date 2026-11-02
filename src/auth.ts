@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
-import { verifyAdminCredentials } from "@/lib/admins";
+import { verifyAdminLogin } from "@/lib/admins";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -19,9 +19,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const email = String(credentials.email).toLowerCase().trim();
         const password = String(credentials.password);
 
-        if (!verifyAdminCredentials(email, password)) {
-          return null;
-        }
+        const admin = await verifyAdminLogin(email, password);
+        if (!admin) return null;
 
         let user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
