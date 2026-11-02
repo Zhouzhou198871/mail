@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 type Site = {
   id: string;
@@ -19,35 +18,34 @@ export function DomainsClient({
   hasCf: boolean;
   hasDnshe: boolean;
 }) {
-  const router = useRouter();
   const [sites, setSites] = useState(initialSites);
   const [siteName, setSiteName] = useState("");
   const [domain, setDomain] = useState("");
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
-    setMsg("");
+    setMsg(null);
     try {
       const res = await fetch("/api/settings/sites", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siteName, domain }),
+        body: JSON.stringify({ siteName: siteName.trim(), domain: domain.trim().toLowerCase() }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setMsg(data.error || "添加失败");
+        setMsg({ ok: false, text: data.error || "添加失败，请检查填写内容" });
         return;
       }
       setSites((prev) => [data.site, ...prev]);
       setSiteName("");
       setDomain("");
-      setMsg("域名已添加，可在 DNS 服务商完成解析");
-      router.refresh();
+      setMsg({ ok: true, text: "域名已添加" });
     } catch {
-      setMsg("网络错误");
+      setMsg({ ok: false, text: "网络连接异常，请重试" });
     } finally {
       setLoading(false);
     }
@@ -81,18 +79,25 @@ export function DomainsClient({
           value={siteName}
           onChange={(e) => setSiteName(e.target.value)}
           required
+          disabled={loading}
         />
         <input
+          type="text"
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
           placeholder="域名，如 mail.example.com"
           value={domain}
           onChange={(e) => setDomain(e.target.value)}
           required
+          disabled={loading}
         />
-        <button type="submit" disabled={loading} className="btn-primary">
-          {loading ? "提交中..." : "添加域名"}
+        <button type="submit" disabled={loading || !siteName.trim() || !domain.trim()} aria-busy={loading} className="btn-primary">
+          {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+          {loading ? "正在添加..." : "添加域名"}
         </button>
-        {msg && <p className="text-sm text-sky-700">{msg}</p>}
+        {msg && <p role="status" aria-live="polite" className={`text-sm ${msg.ok ? "text-emerald-700" : "text-red-600"}`}>{msg.text}</p>}
       </form>
 
       <div className="overflow-hidden rounded-2xl border border-slate-100">
