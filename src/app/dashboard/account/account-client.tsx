@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signOut } from "next-auth/react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type AdminItem = { id: string; email: string; createdAt: string };
 
@@ -25,6 +26,7 @@ export function AccountClient({
   const [adminLoading, setAdminLoading] = useState(false);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<AdminItem | null>(null);
   const [listMsg, setListMsg] = useState("");
   const [signingOut, setSigningOut] = useState(false);
 
@@ -84,20 +86,27 @@ export function AccountClient({
     }
   }
 
-  async function handleDeleteAdmin(id: string, email: string) {
+  function handleDeleteAdmin(id: string, email: string) {
     if (email === currentEmail || deletingId) return;
-    if (!confirm(`确定删除管理员 ${email}？`)) return;
-    setDeletingId(id);
+    const target = admins.find((admin) => admin.id === id);
+    if (target) setPendingDelete(target);
+  }
+
+  async function confirmDeleteAdmin() {
+    const target = pendingDelete;
+    if (!target || deletingId) return;
+    setDeletingId(target.id);
     setListMsg("");
     try {
-      const res = await fetch(`/api/admin/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/${target.id}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) {
         setListMsg(data.error || "删除失败");
         return;
       }
-      setAdmins((prev) => prev.filter((a) => a.id !== id));
-      setListMsg(`管理员 ${email} 已删除`);
+      setAdmins((prev) => prev.filter((a) => a.id !== target.id));
+      setPendingDelete(null);
+      setListMsg(`管理员 ${target.email} 已删除`);
     } catch {
       setListMsg("网络连接异常，请重试");
     } finally {
@@ -216,6 +225,16 @@ export function AccountClient({
         </ul>
       </div>
       {listMsg && <p role="status" aria-live="polite" className="text-sm text-slate-600">{listMsg}</p>}
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="删除管理员"
+        description={pendingDelete ? `确定删除管理员 ${pendingDelete.email}？该账号将立即失去登录权限。` : ""}
+        confirmLabel="确认删除"
+        loading={!!deletingId}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => void confirmDeleteAdmin()}
+      />
 
       <button
         type="button"
