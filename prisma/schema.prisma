@@ -29,6 +29,7 @@ model VerificationCode {
 
 model ApiKey {
   id         String    @id @default(cuid())
+  name       String    @default("默认密钥")
   keyHash    String    @unique
   keyPrefix  String
   lastFour   String
@@ -49,7 +50,7 @@ model EmailLog {
   to        String
   subject   String
   status    String
-  source    String   @default("panel") // panel | api
+  source    String   @default("panel")
   resendId  String?
   error     String?
   createdAt DateTime @default(now())

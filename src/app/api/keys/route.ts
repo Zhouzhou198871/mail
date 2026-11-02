@@ -14,6 +14,7 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
+      name: true,
       keyPrefix: true,
       lastFour: true,
       status: true,
@@ -25,19 +26,30 @@ export async function GET() {
   return NextResponse.json({ keys });
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
 
+  let name = "默认密钥";
+  try {
+    const body = await request.json();
+    if (body?.name && typeof body.name === "string") {
+      name = body.name.trim().slice(0, 40) || "默认密钥";
+    }
+  } catch {
+    // empty body is ok
+  }
+
   const plaintext = generateApiKeyPlaintext();
   const keyHash = hashApiKey(plaintext);
-  const keyPrefix = plaintext.slice(0, 12); // sk_live_xxxx
+  const keyPrefix = plaintext.slice(0, 12);
   const lastFour = plaintext.slice(-4);
 
   const created = await prisma.apiKey.create({
     data: {
+      name,
       keyHash,
       keyPrefix,
       lastFour,
@@ -46,6 +58,7 @@ export async function POST() {
     },
     select: {
       id: true,
+      name: true,
       keyPrefix: true,
       lastFour: true,
       status: true,
