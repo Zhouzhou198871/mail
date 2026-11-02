@@ -103,10 +103,12 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
           即可发信。
         </p>
         <pre className="mt-3 overflow-x-auto rounded-xl bg-slate-900 p-3 text-[11px] leading-5 text-slate-100">
-{ `curl -X POST /api/v1/send \\\
-  -H "Authorization: Bearer sk_live_xxx" \\\
-  -H "Content-Type: application/json" \\\
-  -d '{"to":"a@b.com","subject":"你好","html":"<p>内容</p>"}'` }
+          {[
+            "curl -X POST /api/v1/send \\",
+            '  -H "Authorization: Bearer sk_live_xxx" \\',
+            '  -H "Content-Type: application/json" \\',
+            `  -d '{"to":"a@b.com","subject":"你好","html":"<p>内容</p>"}'`,
+          ].join("\n")}
         </pre>
       </div>
 
