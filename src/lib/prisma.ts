@@ -23,25 +23,24 @@ export const prisma = new Proxy({} as PrismaClient, {
 
     return new Proxy(function () {}, {
       apply(_fn, _this, args: unknown[]) {
-        return getDb().then((db) => {
-          const method = Reflect.get(db, modelOrMethod, db);
-          if (typeof method !== "function") {
-            throw new Error("Unsupported Prisma client method");
-          }
-          return method.apply(db, args);
-        });
+        const db = getDb();
+        const method = Reflect.get(db, modelOrMethod, db);
+        if (typeof method !== "function") {
+          throw new Error("Unsupported Prisma client method");
+        }
+        return method.apply(db, args);
       },
       get(_fn, method: string | symbol) {
         if (method === "then") return undefined;
-        return (...args: unknown[]) =>
-          getDb().then((db) => {
-            const model = Reflect.get(db, modelOrMethod, db);
-            const operation = Reflect.get(model, method, model);
-            if (typeof operation !== "function") {
-              throw new Error("Unsupported Prisma model operation");
-            }
-            return operation.apply(model, args);
-          });
+        return (...args: unknown[]) => {
+          const db = getDb();
+          const model = Reflect.get(db, modelOrMethod, db);
+          const operation = Reflect.get(model, method, model);
+          if (typeof operation !== "function") {
+            throw new Error("Unsupported Prisma model operation");
+          }
+          return operation.apply(model, args);
+        };
       },
     });
   },
