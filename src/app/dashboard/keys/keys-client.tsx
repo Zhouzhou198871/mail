@@ -16,18 +16,22 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
   const [keys, setKeys] = useState(initialKeys);
   const [nickname, setNickname] = useState("");
   const [loading, setLoading] = useState(false);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [plaintext, setPlaintext] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   async function handleCreate() {
     const name = nickname.trim();
+    if (loading) return;
     if (!name) {
       setError("请先填写密钥昵称，例如：官网通知 / 商城验证码");
       return;
     }
     setLoading(true);
     setError("");
+    setNotice("");
     setCopied(false);
     try {
       const res = await fetch("/api/keys", {
@@ -43,16 +47,20 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
       setPlaintext(data.plaintext as string);
       setKeys((prev) => [data.key as KeyItem, ...prev]);
       setNickname("");
+      setNotice("密钥已生成，请立即复制并妥善保存");
     } catch {
-      setError("网络错误");
+      setError("网络连接异常，请重试");
     } finally {
       setLoading(false);
     }
   }
 
   async function handleRevoke(id: string, name: string) {
+    if (revokingId) return;
     if (!confirm(`确定删除「${name}」？删除后立即失效且不可恢复。`)) return;
+    setRevokingId(id);
     setError("");
+    setNotice("");
     try {
       const res = await fetch(`/api/keys/${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -61,8 +69,11 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
         return;
       }
       setKeys((prev) => prev.filter((k) => k.id !== id));
+      setNotice(`密钥「${name}」已删除`);
     } catch {
-      setError("网络错误");
+      setError("网络连接异常，请重试");
+    } finally {
+      setRevokingId(null);
     }
   }
 
@@ -71,8 +82,10 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
     try {
       await navigator.clipboard.writeText(plaintext);
       setCopied(true);
+      setError("");
     } catch {
       setCopied(false);
+      setError("复制失败，请长按密钥文本手动复制");
     }
   }
 
@@ -90,10 +103,10 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
           即可发信。
         </p>
         <pre className="mt-3 overflow-x-auto rounded-xl bg-slate-900 p-3 text-[11px] leading-5 text-slate-100">
-{`curl -X POST /api/v1/send \\
-  -H "Authorization: Bearer sk_live_xxx" \\
-  -H "Content-Type: application/json" \\
-  -d '{"to":"a@b.com","subject":"你好","html":"<p>内容</p>"}'`}
+{ `curl -X POST /api/v1/send \\\
+  -H "Authorization: Bearer sk_live_xxx" \\\
+  -H "Content-Type: application/json" \\\
+  -d '{"to":"a@b.com","subject":"你好","html":"<p>内容</p>"}'` }
         </pre>
       </div>
 
@@ -108,15 +121,16 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
             onChange={(e) => setNickname(e.target.value)}
             placeholder="例如：官网验证码、商城通知"
             maxLength={40}
+            disabled={loading}
             className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
           />
-          <button type="button" onClick={handleCreate} disabled={loading} className="btn-primary shrink-0">
+          <button type="button" onClick={handleCreate} disabled={loading || !nickname.trim()} aria-busy={loading} className="btn-primary shrink-0">
+            {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
             {loading ? "生成中..." : "生成新密钥"}
           </button>
         </div>
-        {error && (
-          <div className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</div>
-        )}
+        {error && <div role="alert" aria-live="polite" className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</div>}
+        {notice && <div role="status" aria-live="polite" className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{notice}</div>}
       </div>
 
       {plaintext && (
@@ -133,7 +147,7 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
             <button
               type="button"
               className="rounded-xl px-3 py-2 text-sm text-slate-500 transition hover:text-slate-800 active:scale-[0.98]"
-              onClick={() => setPlaintext(null)}
+              onClick={() => { setPlaintext(null); setCopied(false); }}
             >
               我已保存，关闭
             </button>
@@ -169,9 +183,11 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
                 <button
                   type="button"
                   onClick={() => handleRevoke(k.id, k.name)}
-                  className="rounded-lg px-2 py-1 text-sm text-rose-600 transition hover:bg-rose-50 active:scale-[0.97]"
+                  disabled={revokingId !== null}
+                  aria-busy={revokingId === k.id}
+                  className="rounded-lg px-2 py-1 text-sm text-rose-600 transition hover:bg-rose-50 active:scale-[0.97] disabled:opacity-50"
                 >
-                  删除
+                  {revokingId === k.id ? "删除中..." : "删除"}
                 </button>
               </div>
             </li>
