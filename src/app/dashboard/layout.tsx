@@ -1,6 +1,7 @@
 import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand-logo";
 
 const nav = [
   { href: "/dashboard", label: "概览" },
@@ -23,15 +24,7 @@ export default async function DashboardLayout({
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500 text-sm font-bold text-white">
-              M
-            </div>
-            <div>
-              <p className="font-semibold text-slate-900">MailHub</p>
-              <p className="text-xs text-slate-500">邮件调度中心</p>
-            </div>
-          </Link>
+          <BrandLogo href="/dashboard" size={36} subtitle="邮件调度中心" />
 
           <div className="flex items-center gap-4">
             <span className="hidden text-sm text-slate-600 sm:inline">

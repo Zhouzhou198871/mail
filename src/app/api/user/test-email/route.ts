@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { sendTestNotificationEmail } from "@/lib/resend";
+import { sendTransactionalEmail } from "@/lib/resend";
 
 export async function POST() {
   const session = await auth();
@@ -23,7 +23,11 @@ export async function POST() {
     }
 
     const to = (user.notificationEmail || user.email).toLowerCase().trim();
-    await sendTestNotificationEmail(to);
+    await sendTransactionalEmail({
+      to,
+      subject: "【MailHub】测试邮件",
+      html: "<p>这是一封来自 MailHub 的测试邮件。若你收到此信，说明邮件通道工作正常。</p>",
+    });
 
     return NextResponse.json({ success: true, to });
   } catch (err: unknown) {

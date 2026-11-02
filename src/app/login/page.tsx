@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -97,12 +98,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-500 text-lg font-bold text-white shadow-sm">
-              M
-            </div>
-            <span className="text-2xl font-bold text-slate-800">MailHub</span>
-          </Link>
+          <BrandLogo size={48} showText />
           <p className="mt-3 text-sm text-slate-500">邮箱验证码登录 / 注册</p>
         </div>
 

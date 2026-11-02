@@ -1,19 +1,12 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
       <header className="border-b border-slate-200">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-5 sm:px-6">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-500 text-sm font-bold text-white">
-              M
-            </div>
-            <div>
-              <p className="font-semibold tracking-tight">MailHub</p>
-              <p className="text-[11px] text-slate-500">邮件调度中心</p>
-            </div>
-          </div>
+          <BrandLogo subtitle="邮件调度中心" size={36} />
           <div className="flex items-center gap-3">
             <Link
               href="/login"
