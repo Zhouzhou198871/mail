@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type SiteCount = { name: string; count: number };
 type KeyRow = {
@@ -17,7 +18,7 @@ type SiteRow = {
   createdAt: string;
 };
 
-type ModalKind = "today" | "total" | "keys" | "sites" | null;
+type ModalKind = "today" | "total" | "keys" | "sites" | "domains" | null;
 
 export function OverviewStats(props: {
   todayLabel: string;
@@ -27,13 +28,14 @@ export function OverviewStats(props: {
   allBySite: SiteCount[];
   keys: KeyRow[];
   sites: SiteRow[];
+  domainCount: number;
   siteCount: number;
 }) {
   const [modal, setModal] = useState<ModalKind>(null);
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <button type="button" onClick={() => setModal("today")} className="stat-card">
           <p className="stat-label">今日发件量</p>
           <p className="stat-value text-slate-900">{props.todayTotal}</p>
@@ -56,6 +58,16 @@ export function OverviewStats(props: {
           <p className="stat-value text-sky-600">{props.siteCount}</p>
           <p className="stat-hint">点按查看明细</p>
         </button>
+        <button type="button" onClick={() => setModal("domains")} className="stat-card">
+          <p className="stat-label">域名</p>
+          <p className="stat-value text-indigo-600">{props.domainCount}</p>
+          <p className="stat-hint">点按查看明细</p>
+        </button>
+        <Link href="/dashboard/logs" className="stat-card block">
+          <p className="stat-label">去发件</p>
+          <p className="stat-value text-sky-600">→</p>
+          <p className="stat-hint">模版一键发送</p>
+        </Link>
       </div>
 
       {modal && (
@@ -84,7 +96,7 @@ export function OverviewStats(props: {
                     </li>
                   ))}
                 </ul>
-                <p className="mt-4 border-t border-slate-100 pt-3 text-sm font-semibold text-slate-900">
+                <p className="mt-4 border-t border-slate-100 pt-3 text-sm font-semibold">
                   总计：今日总发件量 {props.todayTotal}
                 </p>
               </>
@@ -92,11 +104,8 @@ export function OverviewStats(props: {
 
             {modal === "total" && (
               <>
-                <h3 className="text-lg font-bold text-slate-900">累计发件（成立以来）</h3>
+                <h3 className="text-lg font-bold text-slate-900">累计发件</h3>
                 <ul className="mt-4 space-y-2">
-                  {props.allBySite.length === 0 && (
-                    <li className="text-sm text-slate-500">暂无记录</li>
-                  )}
                   {props.allBySite.map((s) => (
                     <li
                       key={s.name}
@@ -106,8 +115,11 @@ export function OverviewStats(props: {
                       <span className="text-slate-600">{s.count} 条</span>
                     </li>
                   ))}
+                  {props.allBySite.length === 0 && (
+                    <li className="text-sm text-slate-500">暂无记录</li>
+                  )}
                 </ul>
-                <p className="mt-4 border-t border-slate-100 pt-3 text-sm font-semibold text-slate-900">
+                <p className="mt-4 border-t border-slate-100 pt-3 text-sm font-semibold">
                   总发件量：{props.allTotal}
                 </p>
               </>
@@ -117,12 +129,9 @@ export function OverviewStats(props: {
               <>
                 <h3 className="text-lg font-bold text-slate-900">生效密钥</h3>
                 <ul className="mt-4 space-y-2">
-                  {props.keys.length === 0 && (
-                    <li className="text-sm text-slate-500">暂无密钥</li>
-                  )}
                   {props.keys.map((k) => (
                     <li key={k.id} className="rounded-xl bg-slate-50 px-3 py-2 text-sm">
-                      <p className="font-medium text-slate-900">{k.name}</p>
+                      <p className="font-medium">{k.name}</p>
                       <p className="font-mono text-xs text-slate-500">{k.mask}</p>
                       <p className="text-[11px] text-slate-400">
                         {new Date(k.createdAt).toLocaleString("zh-CN")}
@@ -137,35 +146,47 @@ export function OverviewStats(props: {
               <>
                 <h3 className="text-lg font-bold text-slate-900">网站数量</h3>
                 <ul className="mt-4 space-y-2">
-                  {props.sites.length === 0 && props.keys.length === 0 && (
-                    <li className="text-sm text-slate-500">暂无绑定网站，可在「设置」添加</li>
-                  )}
-                  {props.sites.map((s) => (
-                    <li key={s.id} className="rounded-xl bg-slate-50 px-3 py-2 text-sm">
-                      <p className="font-medium text-slate-900">{s.siteName}</p>
-                      <p className="text-xs text-slate-500">{s.domain}</p>
-                      <p className="text-[11px] text-slate-400">
-                        {new Date(s.createdAt).toLocaleString("zh-CN")}
-                      </p>
-                    </li>
-                  ))}
-                  {props.sites.length === 0 &&
-                    props.keys.map((k) => (
+                  {props.keys
+                    .filter((k) => k.status === "active")
+                    .map((k) => (
                       <li key={k.id} className="rounded-xl bg-slate-50 px-3 py-2 text-sm">
-                        <p className="font-medium text-slate-900">{k.name}</p>
-                        <p className="text-xs text-slate-500">来自 API 密钥昵称</p>
-                        <p className="text-[11px] text-slate-400">
-                          {new Date(k.createdAt).toLocaleString("zh-CN")}
-                        </p>
+                        <p className="font-medium">{k.name}</p>
+                        <p className="text-xs text-slate-500">API 密钥站点</p>
                       </li>
                     ))}
                 </ul>
               </>
             )}
 
+            {modal === "domains" && (
+              <>
+                <h3 className="text-lg font-bold text-slate-900">域名</h3>
+                <ul className="mt-4 space-y-2">
+                  {props.sites.length === 0 && (
+                    <li className="text-sm text-slate-500">暂无绑定域名</li>
+                  )}
+                  {props.sites.map((s) => (
+                    <li key={s.id} className="rounded-xl bg-slate-50 px-3 py-2 text-sm">
+                      <p className="font-medium">{s.siteName}</p>
+                      <p className="font-mono text-xs text-slate-600">{s.domain}</p>
+                      <p className="text-[11px] text-slate-400">
+                        {new Date(s.createdAt).toLocaleString("zh-CN")}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/dashboard/domains"
+                  className="btn-primary mt-4 inline-flex w-full justify-center"
+                >
+                  管理域名 / DNS
+                </Link>
+              </>
+            )}
+
             <button
               type="button"
-              className="btn-secondary mt-5 w-full"
+              className="btn-secondary mt-4 w-full"
               onClick={() => setModal(null)}
             >
               关闭

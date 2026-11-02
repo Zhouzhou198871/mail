@@ -6,7 +6,8 @@ import { BrandLogo } from "@/components/brand-logo";
 const nav = [
   { href: "/dashboard", label: "概览" },
   { href: "/dashboard/keys", label: "密钥" },
-  { href: "/dashboard/logs", label: "日志" },
+  { href: "/dashboard/logs", label: "发件" },
+  { href: "/dashboard/domains", label: "域名" },
   { href: "/dashboard/settings", label: "设置" },
 ];
 

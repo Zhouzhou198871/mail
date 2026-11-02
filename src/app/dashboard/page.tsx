@@ -81,7 +81,8 @@ export default async function DashboardPage() {
           domain: s.domain,
           createdAt: s.createdAt.toISOString(),
         }))}
-        siteCount={Math.max(sites.length, keys.length)}
+        domainCount={sites.length}
+        siteCount={Math.max(sites.length, keys.filter((k) => k.status === "active").length)}
       />
     </div>
   );

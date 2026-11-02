@@ -16,15 +16,18 @@ export default async function LogsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">发件日志</h1>
-        <p className="mt-1 text-sm text-slate-500">选择模版一键发信，记录即时出现在下方</p>
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">发件</h1>
+        <p className="mt-1 text-sm text-slate-500">模版一键发送 · 记录即时更新</p>
       </div>
 
       <TemplateSendForm defaultTo={session.user.email || ""} />
 
       <div className="overflow-hidden rounded-2xl border border-slate-100">
+        <div className="border-b border-slate-100 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600">
+          最近发件记录
+        </div>
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-100 bg-slate-50 text-slate-500">
+          <thead className="border-b border-slate-100 bg-white text-slate-500">
             <tr>
               <th className="px-3 py-3 font-medium">收件人</th>
               <th className="px-3 py-3 font-medium">主题</th>
