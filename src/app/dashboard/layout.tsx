@@ -4,10 +4,10 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 
 const nav = [
-  { href: "/dashboard", label: "✉️ 概览" },
-  { href: "/dashboard/keys", label: "🔑 API 密钥" },
-  { href: "/dashboard/logs", label: "📋 发件日志" },
-  { href: "/dashboard/settings", label: "⚙️ 设置" },
+  { href: "/dashboard", label: "概览" },
+  { href: "/dashboard/keys", label: "密钥" },
+  { href: "/dashboard/logs", label: "日志" },
+  { href: "/dashboard/settings", label: "设置" },
 ];
 
 export default async function DashboardLayout({
@@ -21,13 +21,14 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <BrandLogo href="/dashboard" size={36} subtitle="邮件调度中心" />
+    <div className="min-h-screen bg-slate-100">
+      <div className="mx-auto max-w-5xl px-3 py-4 sm:px-6 sm:py-6">
+        {/* Top bar card */}
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-sm">
+          <BrandLogo href="/dashboard" size={40} subtitle="邮件调度中心" />
 
-          <div className="flex items-center gap-4">
-            <span className="hidden text-sm text-slate-600 sm:inline">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="hidden max-w-[180px] truncate rounded-full bg-slate-50 px-3 py-1 text-xs text-slate-500 sm:inline">
               {session.user.email}
             </span>
             <form
@@ -38,31 +39,33 @@ export default async function DashboardLayout({
             >
               <button
                 type="submit"
-                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
               >
-                退出登录
+                退出
               </button>
             </form>
           </div>
         </div>
-      </header>
 
-      <div className="mx-auto flex max-w-6xl gap-8 px-4 py-8 sm:px-6">
-        <aside className="hidden w-52 shrink-0 md:block">
-          <nav className="space-y-1">
+        {/* Nav pills card */}
+        <div className="mb-4 rounded-2xl border border-slate-200/80 bg-white p-2 shadow-sm">
+          <nav className="flex flex-wrap gap-1">
             {nav.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                className="rounded-xl px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-sky-50 hover:text-sky-700"
               >
                 {item.label}
               </Link>
             ))}
           </nav>
-        </aside>
+        </div>
 
-        <main className="min-w-0 flex-1">{children}</main>
+        {/* Main content card surface */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-6">
+          {children}
+        </div>
       </div>
     </div>
   );

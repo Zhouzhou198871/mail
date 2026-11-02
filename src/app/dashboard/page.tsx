@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import { ComposeForm } from "./compose-form";
 
 export default async function DashboardPage() {
@@ -28,48 +27,29 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">✉️ 概览</h1>
-        <p className="mt-2 text-slate-600">
-          在网页上直接发信，或使用 API Key 对接其他网站。
-        </p>
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">概览</h1>
+        <p className="mt-1 text-sm text-slate-500">网页发信 · API 对接 · 用量一览</p>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="rounded-xl bg-slate-50 px-3 py-3 text-center sm:px-4 sm:py-4">
+          <p className="text-[11px] text-slate-500 sm:text-xs">今日已发</p>
+          <p className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">{todaySent}</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 px-3 py-3 text-center sm:px-4 sm:py-4">
+          <p className="text-[11px] text-slate-500 sm:text-xs">累计发件</p>
+          <p className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">{totalSent}</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 px-3 py-3 text-center sm:px-4 sm:py-4">
+          <p className="text-[11px] text-slate-500 sm:text-xs">生效密钥</p>
+          <p className="mt-1 text-xl font-bold text-emerald-600 sm:text-2xl">{activeKeys}</p>
+        </div>
       </div>
 
       <ComposeForm defaultTo={session.user.email || ""} />
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="card p-6">
-          <p className="text-sm text-slate-500">📧 今日已发邮件</p>
-          <p className="mt-2 text-4xl font-bold tracking-tight text-slate-900">
-            {todaySent}
-          </p>
-        </div>
-        <div className="card p-6">
-          <p className="text-sm text-slate-500">📬 累计总发件数</p>
-          <p className="mt-2 text-4xl font-bold tracking-tight text-slate-900">
-            {totalSent}
-          </p>
-        </div>
-        <div className="card p-6">
-          <p className="text-sm text-slate-500">🔑 生效中 API Key</p>
-          <p className="mt-2 text-4xl font-bold tracking-tight text-emerald-600">
-            {activeKeys}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <Link href="/dashboard/logs" className="btn-secondary">
-          查看发件日志
-        </Link>
-        <Link href="/dashboard/keys" className="btn-secondary">
-          管理 API 密钥
-        </Link>
-        <Link href="/dashboard/settings" className="btn-secondary">
-          发件配置
-        </Link>
-      </div>
     </div>
   );
 }

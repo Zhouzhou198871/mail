@@ -41,70 +41,69 @@ export function ComposeForm({ defaultTo }: { defaultTo: string }) {
   }
 
   return (
-    <form onSubmit={handleSend} className="card space-y-4 p-6">
-      <div className="flex items-center gap-2">
-        <span className="text-xl" aria-hidden>
-          ✉️
-        </span>
+    <form
+      onSubmit={handleSend}
+      className="space-y-4 rounded-xl border border-slate-100 bg-slate-50/80 p-4 sm:p-5"
+    >
+      <div>
+        <h2 className="text-base font-semibold text-slate-900">实时发信</h2>
+        <p className="text-xs text-slate-500">发送结果会写入发件日志</p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">实时发信</h2>
-          <p className="text-sm text-slate-500">在面板内直接发送，结果会写入发件日志</p>
+          <label htmlFor="to" className="mb-1 block text-xs font-medium text-slate-600">
+            收件人邮箱
+          </label>
+          <input
+            id="to"
+            type="email"
+            required
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+          />
+        </div>
+        <div>
+          <label htmlFor="subject" className="mb-1 block text-xs font-medium text-slate-600">
+            邮件主题
+          </label>
+          <input
+            id="subject"
+            type="text"
+            required
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+          />
         </div>
       </div>
 
       <div>
-        <label htmlFor="to" className="mb-1.5 block text-sm font-medium text-slate-700">
-          收件人邮箱
-        </label>
-        <input
-          id="to"
-          type="email"
-          required
-          value={to}
-          onChange={(e) => setTo(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="subject" className="mb-1.5 block text-sm font-medium text-slate-700">
-          邮件主题
-        </label>
-        <input
-          id="subject"
-          type="text"
-          required
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="html" className="mb-1.5 block text-sm font-medium text-slate-700">
-          邮件正文（支持 HTML）
+        <label htmlFor="html" className="mb-1 block text-xs font-medium text-slate-600">
+          邮件正文（HTML）
         </label>
         <textarea
           id="html"
           required
-          rows={6}
+          rows={5}
           value={html}
           onChange={(e) => setHtml(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 px-4 py-2.5 font-mono text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 font-mono text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-xl bg-sky-500 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-sky-600 disabled:opacity-50"
+        className="w-full rounded-xl bg-sky-500 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 disabled:opacity-50"
       >
-        {loading ? "发送中..." : "✉️ 立即发送"}
+        {loading ? "发送中..." : "立即发送"}
       </button>
 
       {result && (
         <div
-          className={`rounded-lg px-4 py-3 text-sm ${
+          className={`rounded-xl px-3 py-2.5 text-sm ${
             result.ok
               ? "bg-emerald-50 text-emerald-700"
               : "bg-red-50 text-red-600"
