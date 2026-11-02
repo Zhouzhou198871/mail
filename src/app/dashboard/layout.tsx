@@ -60,11 +60,6 @@ export default async function DashboardLayout({
               </Link>
             ))}
           </nav>
-          <div className="mt-8 border-t border-slate-200 pt-4">
-            <Link href="/" className="text-sm text-sky-600 hover:underline">
-              ← 返回首页
-            </Link>
-          </div>
         </aside>
 
         <main className="min-w-0 flex-1">{children}</main>

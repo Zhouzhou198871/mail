@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -49,7 +48,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center">
-          <BrandLogo size={48} showText />
+          <BrandLogo size={48} showText href="/login" />
           <p className="mt-3 text-sm text-slate-500">管理员登录</p>
         </div>
 
@@ -101,12 +100,6 @@ export default function LoginPage() {
             </button>
           </form>
         </div>
-
-        <p className="mt-6 text-center text-sm text-slate-500">
-          <Link href="/" className="text-sky-600 hover:underline">
-            ← 返回首页
-          </Link>
-        </p>
       </div>
     </div>
   );
