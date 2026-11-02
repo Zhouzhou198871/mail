@@ -1,35 +1,37 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { verifyOTP } from "@/lib/otp";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
-      name: "credentials",
+      name: "email-otp",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        code: { label: "Code", type: "text" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials?.email || !credentials?.code) {
           return null;
         }
 
         const email = String(credentials.email).toLowerCase().trim();
-        const password = String(credentials.password);
+        const code = String(credentials.code).trim();
 
-        const user = await prisma.user.findUnique({
+        const result = await verifyOTP(email, code);
+        if (!result.ok) {
+          return null;
+        }
+
+        let user = await prisma.user.findUnique({
           where: { email },
         });
 
         if (!user) {
-          return null;
-        }
-
-        const valid = await bcrypt.compare(password, user.password);
-        if (!valid) {
-          return null;
+          user = await prisma.user.create({
+            data: { email },
+          });
         }
 
         return {
