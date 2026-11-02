@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type KeyItem = {
   id: string;
@@ -17,6 +18,7 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
   const [nickname, setNickname] = useState("");
   const [loading, setLoading] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [pendingRevoke, setPendingRevoke] = useState<{ id: string; name: string } | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [plaintext, setPlaintext] = useState<string | null>(null);
@@ -55,21 +57,26 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
     }
   }
 
-  async function handleRevoke(id: string, name: string) {
-    if (revokingId) return;
-    if (!confirm(`确定删除「${name}」？删除后立即失效且不可恢复。`)) return;
-    setRevokingId(id);
+  function handleRevoke(id: string, name: string) {
+    setPendingRevoke({ id, name });
+  }
+
+  async function confirmRevoke() {
+    const target = pendingRevoke;
+    if (!target || revokingId) return;
+    setRevokingId(target.id);
     setError("");
     setNotice("");
     try {
-      const res = await fetch(`/api/keys/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/keys/${target.id}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "删除失败");
         return;
       }
-      setKeys((prev) => prev.filter((k) => k.id !== id));
-      setNotice(`密钥「${name}」已删除`);
+      setKeys((prev) => prev.filter((k) => k.id !== target.id));
+      setPendingRevoke(null);
+      setNotice(`密钥「${target.name}」已删除`);
     } catch {
       setError("网络连接异常，请重试");
     } finally {
@@ -196,6 +203,15 @@ export function KeysClient({ initialKeys }: { initialKeys: KeyItem[] }) {
           ))}
         </ul>
       </div>
+      <ConfirmDialog
+        open={!!pendingRevoke}
+        title="删除 API 密钥"
+        description={pendingRevoke ? `确定删除「${pendingRevoke.name}」？删除后立即失效且不可恢复。` : ""}
+        confirmLabel="确认删除"
+        loading={!!revokingId}
+        onCancel={() => setPendingRevoke(null)}
+        onConfirm={() => void confirmRevoke()}
+      />
     </div>
   );
 }
