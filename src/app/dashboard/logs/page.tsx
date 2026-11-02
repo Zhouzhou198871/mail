@@ -14,8 +14,10 @@ export default async function LogsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">发件日志</h1>
-      <p className="mt-2 text-slate-600">最近 100 条通过 API 发送的邮件记录。</p>
+      <h1 className="text-2xl font-bold text-slate-900">📋 发件日志</h1>
+      <p className="mt-2 text-slate-600">
+        包含网页发信与 API 调用记录（最近 100 条）。
+      </p>
 
       <div className="card mt-6 overflow-hidden">
         <table className="w-full text-left text-sm">
@@ -31,7 +33,7 @@ export default async function LogsPage() {
             {logs.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-4 py-10 text-center text-slate-500">
-                  暂无发件记录
+                  暂无发件记录，去概览页试发一封吧
                 </td>
               </tr>
             )}

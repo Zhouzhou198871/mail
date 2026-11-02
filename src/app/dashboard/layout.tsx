@@ -4,10 +4,10 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 
 const nav = [
-  { href: "/dashboard", label: "概览" },
-  { href: "/dashboard/keys", label: "API 密钥" },
-  { href: "/dashboard/logs", label: "发件日志" },
-  { href: "/dashboard/settings", label: "设置" },
+  { href: "/dashboard", label: "✉️ 概览" },
+  { href: "/dashboard/keys", label: "🔑 API 密钥" },
+  { href: "/dashboard/logs", label: "📋 发件日志" },
+  { href: "/dashboard/settings", label: "⚙️ 设置" },
 ];
 
 export default async function DashboardLayout({
@@ -48,7 +48,7 @@ export default async function DashboardLayout({
       </header>
 
       <div className="mx-auto flex max-w-6xl gap-8 px-4 py-8 sm:px-6">
-        <aside className="hidden w-48 shrink-0 md:block">
+        <aside className="hidden w-52 shrink-0 md:block">
           <nav className="space-y-1">
             {nav.map((item) => (
               <Link
