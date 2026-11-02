@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 type SiteCount = { name: string; count: number };
@@ -32,6 +32,15 @@ export function OverviewStats(props: {
   siteCount: number;
 }) {
   const [modal, setModal] = useState<ModalKind>(null);
+
+  useEffect(() => {
+    if (!modal) return;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setModal(null);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [modal]);
 
   return (
     <>
@@ -74,14 +83,19 @@ export function OverviewStats(props: {
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center"
           onClick={() => setModal(null)}
+          role="presentation"
         >
           <div
             className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="overview-modal-title"
+            tabIndex={-1}
           >
             {modal === "today" && (
               <>
-                <h3 className="text-lg font-bold text-slate-900">今日发件 · {props.todayLabel}</h3>
+                <h3 id="overview-modal-title" className="text-lg font-bold text-slate-900">今日发件 · {props.todayLabel}</h3>
                 <ul className="mt-4 space-y-2">
                   {props.todayBySite.length === 0 && (
                     <li className="text-sm text-slate-500">今日暂无发件</li>
