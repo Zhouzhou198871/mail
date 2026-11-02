@@ -1,88 +1,99 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
+
 datasource db {
-  provider = "postgresql"
-  url = env("NETLIFY_DB_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
+
 model User {
-  id String @id @default(cuid())
-  email String @unique
-  notificationEmail String?
-  receiveEmailAlerts Boolean @default(true)
-  createdAt DateTime @default(now())
-  apiKeys ApiKey[]
-  emailLogs EmailLog[]
+  id                 String     @id @default(cuid())
+  email              String     @unique
+  notificationEmail  String?
+  receiveEmailAlerts Boolean    @default(true)
+  createdAt          DateTime   @default(now())
+  apiKeys            ApiKey[]
+  emailLogs          EmailLog[]
 }
+
 model Admin {
-  id String @id @default(cuid())
-  email String @unique
+  id           String   @id @default(cuid())
+  email        String   @unique
   passwordHash String
-  createdAt DateTime @default(now())
+  createdAt    DateTime @default(now())
 }
+
 model BootstrapState {
-  id String @id
+  id        String   @id
   createdAt DateTime @default(now())
 }
+
 model RateLimitBucket {
-  key String @id
-  count Int @default(0)
+  key         String   @id
+  count       Int      @default(0)
   windowStart DateTime
-  updatedAt DateTime @updatedAt
+  updatedAt   DateTime @updatedAt
   @@index([updatedAt])
 }
+
 model VerificationCode {
-  id String @id @default(cuid())
-  email String
-  code String
+  id        String   @id @default(cuid())
+  email     String
+  code      String
   expiresAt DateTime
   createdAt DateTime @default(now())
   @@index([email])
 }
+
 model ApiKey {
-  id String @id @default(cuid())
-  name String @default("默认密钥")
-  keyHash String @unique
-  keyPrefix String
-  lastFour String
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  id         String    @id @default(cuid())
+  name       String    @default("默认密钥")
+  keyHash    String    @unique
+  keyPrefix  String
+  lastFour   String
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
   lastUsedAt DateTime?
-  status String @default("active")
+  status     String    @default("active")
   @@index([userId])
   @@index([keyHash])
 }
+
 model EmailLog {
-  id String @id @default(cuid())
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  to String
-  subject String
-  status String
-  source String @default("panel")
-  siteName String?
-  resendId String?
-  error String?
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  to        String
+  subject   String
+  status    String
+  source    String   @default("panel")
+  siteName  String?
+  resendId  String?
+  error     String?
   createdAt DateTime @default(now())
   @@index([userId])
   @@index([createdAt])
   @@index([source])
   @@index([siteName])
 }
+
 model SenderProvider {
-  id String @id @default(cuid())
-  name String
-  type String @default("resend")
-  apiKey String
+  id        String   @id @default(cuid())
+  name      String
+  type      String   @default("resend")
+  apiKey    String
   fromEmail String
-  note String?
+  note      String?
   createdAt DateTime @default(now())
 }
+
 model SiteBinding {
-  id String @id @default(cuid())
-  siteName String
-  domain String
+  id         String   @id @default(cuid())
+  siteName   String
+  domain     String
   providerId String?
-  createdAt DateTime @default(now())
+  createdAt  DateTime @default(now())
 }

@@ -1,9 +1,20 @@
 import { createCipheriv, randomBytes } from "node:crypto";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 const PREFIX = "enc:v1:";
 
+function getEncryptionKey() {
+  try {
+    const { env } = getCloudflareContext();
+    const runtime = env as unknown as { PROVIDER_ENCRYPTION_KEY?: string };
+    return runtime.PROVIDER_ENCRYPTION_KEY || process.env.PROVIDER_ENCRYPTION_KEY || "";
+  } catch {
+    return process.env.PROVIDER_ENCRYPTION_KEY || "";
+  }
+}
+
 export function encryptSecret(value: string): string {
-  const keyHex = process.env.PROVIDER_ENCRYPTION_KEY || "";
+  const keyHex = getEncryptionKey();
   if (!/^[a-f0-9]{64}$/i.test(keyHex)) {
     throw new Error("PROVIDER_ENCRYPTION_KEY 未正确配置");
   }

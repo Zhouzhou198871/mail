@@ -16,23 +16,24 @@ export async function enforceRateLimit(
 ): Promise<boolean> {
   const bucketKey = createHash("sha256").update(scope).digest("hex");
   const statement = [
-    "INSERT INTO \"RateLimitBucket\" (\"key\", \"count\", \"windowStart\", \"updatedAt\") VALUES ($1, 1, NOW(), NOW())",
-    "ON CONFLICT (\"key\") DO UPDATE SET",
-    "\"count\" = CASE WHEN \"RateLimitBucket\".\"windowStart\" <= NOW() - ($2 * INTERVAL '1 millisecond') THEN 1 ELSE \"RateLimitBucket\".\"count\" + 1 END,",
-    "\"windowStart\" = CASE WHEN \"RateLimitBucket\".\"windowStart\" <= NOW() - ($2 * INTERVAL '1 millisecond') THEN NOW() ELSE \"RateLimitBucket\".\"windowStart\" END,",
-    "\"updatedAt\" = NOW() RETURNING \"count\"",
+    'INSERT INTO "RateLimitBucket" ("key", "count", "windowStart", "updatedAt") VALUES (?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)',
+    'ON CONFLICT ("key") DO UPDATE SET',
+    '"count" = CASE WHEN (julianday(CURRENT_TIMESTAMP) - julianday("RateLimitBucket"."windowStart")) * 86400000 >= ? THEN 1 ELSE "RateLimitBucket"."count" + 1 END,',
+    '"windowStart" = CASE WHEN (julianday(CURRENT_TIMESTAMP) - julianday("RateLimitBucket"."windowStart")) * 86400000 >= ? THEN CURRENT_TIMESTAMP ELSE "RateLimitBucket"."windowStart" END,',
+    '"updatedAt" = CURRENT_TIMESTAMP RETURNING "count"',
   ].join(" ");
 
   const rows = await prisma.$queryRawUnsafe<Array<{ count: number }>>(
     statement,
     bucketKey,
+    windowMs,
     windowMs
   );
 
   if (Math.random() < 0.01) {
     void prisma.$executeRawUnsafe(
-      "DELETE FROM \"RateLimitBucket\" WHERE \"updatedAt\" < NOW() - INTERVAL '7 days'"
+      'DELETE FROM "RateLimitBucket" WHERE "updatedAt" < datetime("now", "-7 days")'
     ).catch(() => {});
   }
-  return (rows[0]?.count ?? limit + 1) <= limit;
+  return Number(rows[0]?.count ?? limit + 1) <= limit;
 }

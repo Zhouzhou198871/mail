@@ -1,3 +1,4 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/password";
 
@@ -9,14 +10,22 @@ export const BOOTSTRAP_ADMINS = [
 
 const BOOTSTRAP_STATE_ID = "bootstrap-admins-v1";
 
-function isUniqueConstraintError(error: unknown) {
-  return typeof error === "object" && error !== null &&
-    "code" in error && (error as { code?: string }).code === "P2002";
+function getBootstrapPassword() {
+  try {
+    const { env } = getCloudflareContext();
+    const runtime = env as unknown as { BOOTSTRAP_ADMIN_PASSWORD?: string };
+    return runtime.BOOTSTRAP_ADMIN_PASSWORD || process.env.BOOTSTRAP_ADMIN_PASSWORD;
+  } catch {
+    return process.env.BOOTSTRAP_ADMIN_PASSWORD;
+  }
 }
 
-/** Provision the three built-in administrators exactly once from a Netlify secret. */
+/**
+ * D1 does not provide interactive transactions. Idempotent upserts make this
+ * safe to retry: existing administrator passwords are never overwritten.
+ */
 export async function ensureBootstrapAdmins() {
-  const password = process.env.BOOTSTRAP_ADMIN_PASSWORD;
+  const password = getBootstrapPassword();
   if (!password || password.length < 24) {
     throw new Error("BOOTSTRAP_ADMIN_PASSWORD 未配置或强度不足（至少 24 位）");
   }
@@ -26,32 +35,25 @@ export async function ensureBootstrapAdmins() {
   });
 
   if (!state) {
-    try {
-      await prisma.$transaction(async (tx) => {
-        const transactionState = await tx.bootstrapState.findUnique({
-          where: { id: BOOTSTRAP_STATE_ID },
-        });
-        if (transactionState) return;
-
-        for (const email of BOOTSTRAP_ADMINS) {
-          await tx.admin.upsert({
-            where: { email },
-            create: { email, passwordHash: hashPassword(password) },
-            update: { passwordHash: hashPassword(password) },
-          });
-        }
-        await tx.bootstrapState.create({ data: { id: BOOTSTRAP_STATE_ID } });
+    for (const email of BOOTSTRAP_ADMINS) {
+      await prisma.admin.upsert({
+        where: { email },
+        create: { email, passwordHash: hashPassword(password) },
+        update: {},
       });
-    } catch (error) {
-      if (!isUniqueConstraintError(error)) throw error;
+    }
+
+    try {
+      await prisma.bootstrapState.create({ data: { id: BOOTSTRAP_STATE_ID } });
+    } catch {
       const completed = await prisma.bootstrapState.findUnique({
         where: { id: BOOTSTRAP_STATE_ID },
       });
-      if (!completed) throw error;
+      if (!completed) throw new Error("管理员初始化未完成，请重试");
     }
   }
 
-  // Restore a missing built-in account without overwriting an existing password.
+  // Restore a missing built-in account without changing any existing password.
   for (const email of BOOTSTRAP_ADMINS) {
     await prisma.admin.upsert({
       where: { email },
