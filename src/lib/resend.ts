@@ -1,6 +1,8 @@
 import { Resend } from "resend";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
+export const defaultFromEmail = process.env.RESEND_FROM_EMAIL || defaultFromEmail;
+
 function getMailConfig() {
   try {
     const { env } = getCloudflareContext();
