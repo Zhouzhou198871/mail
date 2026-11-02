@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-export const defaultFromEmail = process.env.RESEND_FROM_EMAIL || defaultFromEmail;
+export const defaultFromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
 function getMailConfig() {
   try {
@@ -12,12 +12,12 @@ function getMailConfig() {
     };
     return {
       apiKey: runtime.RESEND_API_KEY || process.env.RESEND_API_KEY || "",
-      fromEmail: runtime.RESEND_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
+      fromEmail: runtime.RESEND_FROM_EMAIL || defaultFromEmail,
     };
   } catch {
     return {
       apiKey: process.env.RESEND_API_KEY || "",
-      fromEmail: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
+      fromEmail: defaultFromEmail,
     };
   }
 }
