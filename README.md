@@ -26,11 +26,11 @@ MailHub 是内部使用的邮件配置管理面板，不是公共邮箱网站，
 - Cloudflare Worker Route：mail.lynli.me/*
 - Worker 将请求转发至 Netlify 源站，并保留外部 Host / HTTPS 转发信息。
 
-Cloudflare 的 DNS 记录必须为 mail CNAME 到 qingtian-pay.netlify.app，并启用 Proxied。不要将这个 Web 面板主机名与 SMTP/IMAP 邮件服务器主机名混用。
+Cloudflare DNS：mail CNAME 指向 qingtian-pay.netlify.app，Cloudflare 代理已开启。不要将这个 Web 面板主机名与 SMTP/IMAP 邮件服务器主机名混用。
 
 ## 环境变量
 
-在 Netlify 项目设置中配置。所有密钥必须使用 Secret 环境变量，不要提交到 Git：
+在 Netlify 项目设置中配置。密钥应使用 Secret 环境变量，不要提交到 Git：
 
 | 变量 | 必需 | 用途 |
 |---|---:|---|
@@ -39,7 +39,7 @@ Cloudflare 的 DNS 记录必须为 mail CNAME 到 qingtian-pay.netlify.app，并
 | NEXTAUTH_URL | 是 | 固定为 https://mail.lynli.me |
 | BOOTSTRAP_ADMIN_PASSWORD | 是 | 三个初始管理员的一次性初始化密码，至少 24 位 |
 | PROVIDER_ENCRYPTION_KEY | 是 | 64 位十六进制 AES-256-GCM 加密密钥 |
-| RESEND_API_KEY | 是 | Resend API Key，必须设为 Secret |
+| RESEND_API_KEY | 是 | Resend API Key |
 | RESEND_FROM_EMAIL | 是 | Resend 已验证域名下的发件地址 |
 | CF_API_TOKEN / CF_ACCOUNT_ID | 否 | 仅在应用需要执行 Cloudflare DNS 管理时使用 |
 | DNSHE_API_ID / DNSHE_API_TOKEN | 否 | 可选 DNS 服务商凭据 |
@@ -98,19 +98,23 @@ Content-Type: application/json
 安全要求：
 
 - API Key 仅保存 SHA-256 哈希，明文只在创建时显示一次。
-- 每个 API Key 默认每分钟最多发送 30 次；同一来源 IP 每分钟最多 120 次。
-- Cloudflare 对经代理的 API POST 请求再做边缘限流。
+- 每个 API Key 默认每分钟最多发送 30 次；同一来源 IP 每分钟最多 120 次；未授权请求按 IP 每分钟最多 60 次。
+- Cloudflare 对管理员登录回调每 10 秒最多允许 5 次，超过后短时封锁；应用数据库层再按账号与 IP 每 15 分钟最多 8 次。
 - 单次请求体最多 256 KiB，HTML 正文最多 100 KiB。
 - 不要把 API Key 放在浏览器前端代码、公开仓库或客户端应用中；应由业务网站服务端调用。
 - 密钥泄露后立即在管理面板吊销并重新生成。
 
 ## 安全与反滥用
 
+- Cloudflare 自定义规则对管理员登录页面与 credentials 登录回调启用 Managed Challenge。
+- Cloudflare Rate Limiting 保护 credentials 登录回调。
 - 管理员登录失败按账号与来源 IP 共享限流：每 15 分钟最多 8 次。
 - API 发送按密钥和 IP 双重限流，数据保存在 PostgreSQL，跨 Netlify Function 实例生效。
+- 未授权 API 发送尝试也会先按 IP 限流。
 - 公开验证码发送接口已停用；本项目不开放公众注册。
 - 管理 API 统一要求有效会话。
 - 动态页面与 API 使用 no-store；响应添加 HSTS、X-Frame-Options、nosniff、Referrer-Policy 与 Permissions-Policy。
+- 页面设置 noindex，避免管理面板被搜索引擎收录。
 - 发件通道 API 凭据使用 AES-256-GCM 加密入库；旧版明文凭据会在设置页首次加载时迁移加密。
 - Cloudflare Worker 不缓存管理页面、API 或认证响应。
 

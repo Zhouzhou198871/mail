@@ -13,6 +13,15 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const attemptAllowed = await enforceRateLimit("send-attempt-ip:" + ip, 60, 60 * 1000);
+  if (!attemptAllowed) {
+    return NextResponse.json(
+      { success: false, error: "请求过于频繁，请稍后重试" },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
+  }
+
   const authResult = await verifyApiKeyFromRequest(request);
   if (!authResult.ok || !authResult.userId || !authResult.apiKeyId) {
     return NextResponse.json(
@@ -21,7 +30,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const ip = getClientIp(request);
   const [keyAllowed, ipAllowed] = await Promise.all([
     enforceRateLimit("send-key:" + authResult.apiKeyId, 30, 60 * 1000),
     enforceRateLimit("send-ip:" + ip, 120, 60 * 1000),

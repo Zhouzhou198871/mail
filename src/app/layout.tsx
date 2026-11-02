@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     "MailHub 邮件配置管理中心：管理员登录、发件通道、API Key、域名配置与发件记录。",
   keywords: ["MailHub", "邮件API", "邮件配置", "Resend", "Transactional Email"],
   authors: [{ name: "MailHub" }],
+  robots: { index: false, follow: false, noarchive: true },
   alternates: { canonical: "/" },
   openGraph: {
     title: "MailHub - 邮件配置管理中心",
