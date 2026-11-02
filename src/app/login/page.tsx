@@ -14,6 +14,7 @@ export default function LoginPage() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setError("");
 
     const trimmed = email.trim().toLowerCase();
@@ -35,10 +36,9 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
-      router.refresh();
+      router.replace("/dashboard");
     } catch {
-      setError("网络错误，请重试");
+      setError("网络连接异常，请检查网络后重试");
     } finally {
       setLoading(false);
     }
@@ -57,7 +57,7 @@ export default function LoginPage() {
           <p className="mt-1 text-center text-sm text-slate-500">请输入管理员账号与密码</p>
 
           {error && (
-            <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+            <div role="alert" aria-live="polite" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
           )}
 
           <form onSubmit={handleLogin} className="mt-6 space-y-4" noValidate>
@@ -72,7 +72,8 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@example.com"
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+                disabled={loading}
+                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-50"
               />
             </div>
 
@@ -87,16 +88,20 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="请输入密码"
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
+                disabled={loading}
+                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 disabled:bg-slate-50"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-sky-500 py-2.5 text-sm font-semibold text-white transition hover:bg-sky-600 disabled:opacity-50"
+              aria-busy={loading}
+              className="btn-primary w-full py-3"
             >
-              {loading ? "登录中..." : "登录"}
+              {loading ? (
+                <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />正在验证...</>
+              ) : "登录"}
             </button>
           </form>
         </div>
