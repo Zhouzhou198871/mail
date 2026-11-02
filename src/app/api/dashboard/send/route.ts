@@ -49,6 +49,7 @@ export async function POST(request: Request) {
         to,
         subject,
         status: "sent",
+        source: "panel",
         resendId,
       },
     });
@@ -64,6 +65,7 @@ export async function POST(request: Request) {
           to,
           subject,
           status: "failed",
+          source: "panel",
           error: message.slice(0, 500),
         },
       })

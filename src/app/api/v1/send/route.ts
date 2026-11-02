@@ -52,6 +52,7 @@ export async function POST(request: Request) {
         to,
         subject,
         status: "sent",
+        source: "api",
         resendId,
       },
     });
@@ -67,6 +68,7 @@ export async function POST(request: Request) {
           to,
           subject,
           status: "failed",
+          source: "api",
           error: message.slice(0, 500),
         },
       })

@@ -49,10 +49,12 @@ model EmailLog {
   to        String
   subject   String
   status    String
+  source    String   @default("panel") // panel | api
   resendId  String?
   error     String?
   createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([createdAt])
+  @@index([source])
 }
