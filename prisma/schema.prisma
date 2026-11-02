@@ -4,9 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // Normalized at build time by scripts/resolve-db-url.mjs from
-  // NETLIFY_DB_URL | NETLIFY_DATABASE_URL | DATABASE_URL
-  url      = env("DATABASE_URL")
+  url      = env("NETLIFY_DB_URL")
 }
 
 model User {

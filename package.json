@@ -10,7 +10,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@netlify/database": "^0.1.0",
+    "@netlify/database": "^2.0.1",
     "@prisma/client": "^6.5.0",
     "next": "16.4.3",
     "next-auth": "^5.0.0-beta.25",
