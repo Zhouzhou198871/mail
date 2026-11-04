@@ -1,23 +1,36 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mailhub",
-  "main": ".open-next/worker.js",
+  "main": "./worker.ts",
   "compatibility_date": "2026-11-02",
   "compatibility_flags": ["nodejs_compat", "nodejs_compat_populate_process_env"],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "mailhub",
+    "database_id": "bbab792a-fd43-4740-97ed-dd4764e65b82",
+    "migrations_dir": "migrations"
+  }],
+  "queues": {
+    "producers": [{ "binding": "EMAIL_QUEUE", "queue": "mailhub-email" }],
+    "consumers": [
+      {
+        "queue": "mailhub-email",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 5,
+        "retry_delay": 30,
+        "dead_letter_queue": "mailhub-email-dead",
+        "max_concurrency": 1
+      },
+      {
+        "queue": "mailhub-email-dead",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 10,
+        "max_concurrency": 1
+      }
+    ]
   },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "mailhub",
-      "database_id": "bbab792a-fd43-4740-97ed-dd4764e65b82",
-      "migrations_dir": "migrations"
-    }
-  ],
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 0.1
-  }
+  "observability": { "enabled": true, "head_sampling_rate": 0.1 }
 }
