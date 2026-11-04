@@ -29,7 +29,6 @@ interface Env {
   VPS_MAIL_API_URL?: string;
   VPS_MAIL_API_KEY?: string;
 }
-const MAIN_QUEUE = "mailhub-email";
 const DEAD_QUEUE = "mailhub-email-dead";
 const MAX_MESSAGE_BYTES = 120 * 1024;
 const VPS_TIMEOUT_MS = 15_000;
@@ -48,7 +47,7 @@ function errorText(payload: unknown): string {
   }
   return JSON.stringify(payload).slice(0, 300);
 }
-async function sendToVps(message: EmailQueueMessage, env: Env): Promise<string | null> {
+async function sendToVps(message: EmailQueueMessage, env: Env): Promise<void> {
   const endpoint = env.VPS_MAIL_API_URL?.trim();
   const apiKey = env.VPS_MAIL_API_KEY;
   if (!endpoint || !apiKey) {
@@ -93,23 +92,16 @@ async function sendToVps(message: EmailQueueMessage, env: Env): Promise<string |
   if (!response.ok) {
     const retryable = response.status === 408 || response.status === 409 ||
       response.status === 425 || response.status === 429 || response.status >= 500;
-    throw new DeliveryError(
-      `VPS HTTP ${response.status}: ${errorText(payload)}`,
-      retryable
-    );
+    throw new DeliveryError(`VPS HTTP ${response.status}: ${errorText(payload)}`, retryable);
   }
   if (payload && typeof payload === "object" && (payload as Record<string, unknown>).success === false) {
     throw new DeliveryError("VPS 返回发送失败：" + errorText(payload), false);
   }
-  const result = payload && typeof payload === "object" ? payload as Record<string, unknown> : {};
-  return typeof result.messageId === "string" ? result.messageId : message.logId;
 }
-async function updateLog(
-  env: Env, logId: string, status: string, providerId: string | null, error: string | null
-): Promise<void> {
+async function updateLog(env: Env, logId: string, status: string, error: string | null): Promise<void> {
   await env.DB.prepare(
-    'UPDATE "EmailLog" SET "status" = ?, "resendId" = ?, "error" = ? WHERE "id" = ?'
-  ).bind(status, providerId, error, logId).run();
+    'UPDATE "EmailLog" SET "status" = ?, "error" = ? WHERE "id" = ?'
+  ).bind(status, error, logId).run();
 }
 export async function handleEmailQueue(batch: QueueBatch<EmailQueueMessage>, env: Env): Promise<void> {
   const dead = batch.queue === DEAD_QUEUE;
@@ -138,26 +130,26 @@ export async function handleEmailQueue(batch: QueueBatch<EmailQueueMessage>, env
         continue;
       }
       if (dead) {
-        await updateLog(env, body.logId, "failed", null,
+        await updateLog(env, body.logId, "failed",
           (log.error || "邮件任务超过最大重试次数") + "；已进入死信队列，请管理员检查");
         message.ack();
         continue;
       }
-      await updateLog(env, body.logId, "sending", null, null);
-      const providerId = await sendToVps(body, env);
-      await updateLog(env, body.logId, "sent", providerId, null);
+      await updateLog(env, body.logId, "sending", null);
+      await sendToVps(body, env);
+      await updateLog(env, body.logId, "sent", null);
       message.ack();
     } catch (error) {
       const detail = error instanceof Error ? error.message : "未知发送错误";
       const retryable = !(error instanceof DeliveryError) || error.retryable;
       if (retryable) {
-        await updateLog(env, body.logId, "queued", null,
+        await updateLog(env, body.logId, "queued",
           ("第 " + message.attempts + " 次尝试失败：" + detail).slice(0, 500))
           .catch((dbError) => console.error("[email-queue] retry status update failed", dbError));
         const delaySeconds = Math.min(300, 5 * 2 ** Math.max(0, message.attempts - 1));
         message.retry({ delaySeconds });
       } else {
-        await updateLog(env, body.logId, "failed", null, detail.slice(0, 500))
+        await updateLog(env, body.logId, "failed", detail.slice(0, 500))
           .catch((dbError) => console.error("[email-queue] failed status update failed", dbError));
         message.ack();
       }
