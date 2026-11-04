@@ -10,6 +10,13 @@ const bodySchema = z.object({
   to: z.string().email("收件人邮箱格式不正确").max(254),
   subject: z.string().trim().min(1, "主题不能为空").max(200),
   html: z.string().min(1, "邮件内容不能为空").max(100_000),
+  attachments: z.array(z.object({
+  filename: z.string().min(1).max(255),
+  contentBase64: z.string().min(1).max(100_000),
+  contentType: z.string().max(128).optional(),
+  disposition: z.enum(["attachment", "inline"]).optional(),
+  cid: z.string().max(255).optional(),
+})).max(10).optional(),
 });
 export async function POST(request: Request) {
   const ip = getClientIp(request);
@@ -71,6 +78,7 @@ export async function POST(request: Request) {
       to: parsed.data.to,
       subject: parsed.data.subject,
       html: parsed.data.html,
+      attachments: parsed.data.attachments,
       source: "api",
       siteName: key?.name || "API",
     });
