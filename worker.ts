@@ -8,7 +8,21 @@ interface D1Statement {
   run(): Promise<unknown>;
 }
 interface D1Database { prepare(sql: string): D1Statement; }
-interface EmailQueueMessage { logId: string; to: string; subject: string; html: string; }
+interface EmailAttachment {
+  filename: string;
+  contentBase64: string;
+  contentType?: string;
+  disposition?: "attachment" | "inline";
+  cid?: string;
+}
+interface EmailQueueMessage {
+  logId: string;
+  to: string;
+  from: string;
+  subject: string;
+  html: string;
+  attachments?: EmailAttachment[];
+}
 interface QueueMessage<T> {
   body: T; attempts: number; ack(): void;
   retry(options?: { delaySeconds?: number }): void;
@@ -16,10 +30,9 @@ interface QueueMessage<T> {
 interface QueueBatch<T> { queue: string; messages: QueueMessage<T>[]; }
 interface WorkerEnv {
   DB: D1Database;
-  RESEND_API_KEY?: string;
-  RESEND_FROM_EMAIL?: string;
-  SENDGRID_API_KEY?: string;
-  SENDGRID_FROM_EMAIL?: string;
+  VPS_MAIL_API_URL?: string;
+  VPS_MAIL_API_KEY?: string;
+  VPS_MAIL_FROM_EMAIL?: string;
 }
 export default {
   fetch(request: Request, env: WorkerEnv, ctx: unknown): Promise<Response> {
