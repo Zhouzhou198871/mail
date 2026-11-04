@@ -55,8 +55,10 @@ jobs:
 
       - name: Deploy to Cloudflare production
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_KEY: ${{ secrets.CF_API_KEY }}
+          CLOUDFLARE_EMAIL: ${{ secrets.CF_EMAIL }}
           CLOUDFLARE_ACCOUNT_ID: "39fba5c84e10f7f4c1cceab74dd9ec95"
         run: |
-          test -n "$CLOUDFLARE_API_TOKEN" || (echo "::error::Missing repository secret CLOUDFLARE_API_TOKEN. Add it in Settings > Secrets and variables > Actions."; exit 1)
+          test -n "$CLOUDFLARE_API_KEY" || (echo "::error::Missing repository secret CF_API_KEY. Add it in Settings > Secrets and variables > Actions."; exit 1)
+          test -n "$CLOUDFLARE_EMAIL" || (echo "::error::Missing repository secret CF_EMAIL. Add it in Settings > Secrets and variables > Actions."; exit 1)
           npx wrangler deploy --keep-vars
