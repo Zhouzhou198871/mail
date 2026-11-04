@@ -4,7 +4,21 @@ interface D1Statement {
   run(): Promise<unknown>;
 }
 interface D1Database { prepare(sql: string): D1Statement; }
-interface EmailQueueMessage { logId: string; to: string; subject: string; html: string; }
+interface EmailAttachment {
+  filename: string;
+  contentBase64: string;
+  contentType?: string;
+  disposition?: "attachment" | "inline";
+  cid?: string;
+}
+interface EmailQueueMessage {
+  logId: string;
+  to: string;
+  from: string;
+  subject: string;
+  html: string;
+  attachments?: EmailAttachment[];
+}
 interface QueueMessage<T> {
   body: T; attempts: number; ack(): void;
   retry(options?: { delaySeconds?: number }): void;
@@ -12,23 +26,20 @@ interface QueueMessage<T> {
 interface QueueBatch<T> { queue: string; messages: QueueMessage<T>[]; }
 interface Env {
   DB: D1Database;
-  RESEND_API_KEY?: string;
-  RESEND_FROM_EMAIL?: string;
-  SENDGRID_API_KEY?: string;
-  SENDGRID_FROM_EMAIL?: string;
+  VPS_MAIL_API_URL?: string;
+  VPS_MAIL_API_KEY?: string;
 }
 const MAIN_QUEUE = "mailhub-email";
 const DEAD_QUEUE = "mailhub-email-dead";
 const MAX_MESSAGE_BYTES = 120 * 1024;
-const SEND_INTERVAL_MS = 125;
+const VPS_TIMEOUT_MS = 15_000;
 
 class DeliveryError extends Error {
-  constructor(message: string, public readonly retryable: boolean, public readonly uncertain = false) {
+  constructor(message: string, public readonly retryable: boolean) {
     super(message);
     this.name = "DeliveryError";
   }
 }
-const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 function errorText(payload: unknown): string {
   if (payload && typeof payload === "object") {
     const item = payload as Record<string, unknown>;
@@ -37,93 +48,61 @@ function errorText(payload: unknown): string {
   }
   return JSON.stringify(payload).slice(0, 300);
 }
-async function sendResend(message: EmailQueueMessage, env: Env): Promise<string | null> {
-  if (!env.RESEND_API_KEY || !env.RESEND_FROM_EMAIL) {
-    throw new DeliveryError("Resend 未配置 RESEND_API_KEY 或 RESEND_FROM_EMAIL", false);
+async function sendToVps(message: EmailQueueMessage, env: Env): Promise<string | null> {
+  const endpoint = env.VPS_MAIL_API_URL?.trim();
+  const apiKey = env.VPS_MAIL_API_KEY;
+  if (!endpoint || !apiKey) {
+    throw new DeliveryError("VPS_MAIL_API_URL 或 VPS_MAIL_API_KEY 未配置", false);
   }
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+    if (url.protocol !== "https:" && url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {
+      throw new Error("VPS 邮件接口必须使用 HTTPS");
+    }
+  } catch (error) {
+    throw new DeliveryError("VPS_MAIL_API_URL 无效：" + (error instanceof Error ? error.message : "invalid URL"), false);
+  }
+
   let response: Response;
   try {
-    response = await fetch("https://api.resend.com/emails", {
+    response = await fetch(url.toString(), {
       method: "POST",
       headers: {
-        Authorization: \`Bearer \${env.RESEND_API_KEY}\`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "Idempotency-Key": message.logId,
+        "X-Idempotency-Key": message.logId,
       },
       body: JSON.stringify({
-        from: \`MailHub <\${env.RESEND_FROM_EMAIL}>\`,
-        to: [message.to],
+        to: message.to,
+        from: message.from,
         subject: message.subject,
         html: message.html,
+        ...(message.attachments?.length ? { attachments: message.attachments } : {}),
       }),
+      signal: AbortSignal.timeout(VPS_TIMEOUT_MS),
     });
   } catch (error) {
     throw new DeliveryError(
-      "Resend 网络请求异常：" + (error instanceof Error ? error.message : "network error"),
-      true, true
+      "VPS 邮件接口网络/超时异常：" + (error instanceof Error ? error.message : "network error"),
+      true
     );
   }
+
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const concurrent409 = response.status === 409 &&
-      JSON.stringify(payload).includes("concurrent_idempotent_requests");
-    const retryable = response.status === 408 || response.status === 429 ||
-      response.status >= 500 || concurrent409;
-    throw new DeliveryError("Resend HTTP " + response.status + ": " + errorText(payload), retryable);
-  }
-  return payload && typeof payload.id === "string" ? payload.id : null;
-}
-async function sendSendGrid(message: EmailQueueMessage, env: Env): Promise<string | null> {
-  const fromEmail = env.SENDGRID_FROM_EMAIL || env.RESEND_FROM_EMAIL;
-  if (!env.SENDGRID_API_KEY || !fromEmail) {
-    throw new DeliveryError("SendGrid 未配置 API Key 或发件地址", false);
-  }
-  let response: Response;
-  try {
-    response = await fetch("https://api.sendgrid.com/v3/mail/send", {
-      method: "POST",
-      headers: {
-        Authorization: \`Bearer \${env.SENDGRID_API_KEY}\`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        personalizations: [{
-          to: [{ email: message.to }],
-          custom_args: { mailhub_log_id: message.logId },
-        }],
-        from: { email: fromEmail, name: "MailHub" },
-        subject: message.subject,
-        content: [{ type: "text/html", value: message.html }],
-      }),
-    });
-  } catch (error) {
+    const retryable = response.status === 408 || response.status === 409 ||
+      response.status === 425 || response.status === 429 || response.status >= 500;
     throw new DeliveryError(
-      "SendGrid 网络请求异常：" + (error instanceof Error ? error.message : "network error"),
-      true, true
+      `VPS HTTP ${response.status}: ${errorText(payload)}`,
+      retryable
     );
   }
-  if (response.status !== 202 && !response.ok) {
-    const detail = (await response.text().catch(() => "")).slice(0, 300);
-    const retryable = response.status === 408 || response.status === 429 || response.status >= 500;
-    throw new DeliveryError("SendGrid HTTP " + response.status + ": " + detail, retryable);
+  if (payload && typeof payload === "object" && (payload as Record<string, unknown>).success === false) {
+    throw new DeliveryError("VPS 返回发送失败：" + errorText(payload), false);
   }
-  const id = response.headers.get("x-message-id");
-  return id ? "sendgrid:" + id : "sendgrid:" + message.logId;
-}
-async function deliver(message: EmailQueueMessage, env: Env): Promise<string | null> {
-  if (env.RESEND_API_KEY && env.RESEND_FROM_EMAIL) {
-    try {
-      return await sendResend(message, env);
-    } catch (error) {
-      if (!(error instanceof DeliveryError)) throw error;
-      // Rate limits, 5xx and network ambiguity retry Resend with the same key.
-      if (error.retryable || error.uncertain) throw error;
-      console.error("[email-queue] Resend permanent error; trying SendGrid", error.message);
-      if (!env.SENDGRID_API_KEY) throw error;
-    }
-  }
-  if (env.SENDGRID_API_KEY) return sendSendGrid(message, env);
-  throw new DeliveryError("没有可用发件通道，请配置 Resend 或 SendGrid", false);
+  const result = payload && typeof payload === "object" ? payload as Record<string, unknown> : {};
+  return typeof result.messageId === "string" ? result.messageId : message.logId;
 }
 async function updateLog(
   env: Env, logId: string, status: string, providerId: string | null, error: string | null
@@ -137,7 +116,9 @@ export async function handleEmailQueue(batch: QueueBatch<EmailQueueMessage>, env
   for (const message of batch.messages) {
     const body = message.body;
     if (!body || typeof body.logId !== "string" || typeof body.to !== "string" ||
-        typeof body.subject !== "string" || typeof body.html !== "string" ||
+        typeof body.from !== "string" || typeof body.subject !== "string" ||
+        typeof body.html !== "string" ||
+        (body.attachments !== undefined && !Array.isArray(body.attachments)) ||
         new TextEncoder().encode(JSON.stringify(body)).byteLength > MAX_MESSAGE_BYTES) {
       console.error("[email-queue] invalid message; acknowledging");
       message.ack();
@@ -163,8 +144,7 @@ export async function handleEmailQueue(batch: QueueBatch<EmailQueueMessage>, env
         continue;
       }
       await updateLog(env, body.logId, "sending", null, null);
-      await wait(SEND_INTERVAL_MS);
-      const providerId = await deliver(body, env);
+      const providerId = await sendToVps(body, env);
       await updateLog(env, body.logId, "sent", providerId, null);
       message.ack();
     } catch (error) {
@@ -181,7 +161,7 @@ export async function handleEmailQueue(batch: QueueBatch<EmailQueueMessage>, env
           .catch((dbError) => console.error("[email-queue] failed status update failed", dbError));
         message.ack();
       }
-      console.error("[email-queue] delivery attempt failed", {
+      console.error("[email-queue] VPS delivery attempt failed", {
         logId: body.logId, attempt: message.attempts, retryable, error: detail,
       });
     }
