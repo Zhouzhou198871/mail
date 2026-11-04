@@ -32,6 +32,8 @@ interface Env {
 const DEAD_QUEUE = "mailhub-email-dead";
 const MAX_MESSAGE_BYTES = 120 * 1024;
 const VPS_TIMEOUT_MS = 15_000;
+const SEND_INTERVAL_MS = 125;
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 class DeliveryError extends Error {
   constructor(message: string, public readonly retryable: boolean) {
@@ -136,6 +138,7 @@ export async function handleEmailQueue(batch: QueueBatch<EmailQueueMessage>, env
         continue;
       }
       await updateLog(env, body.logId, "sending", null);
+      await wait(SEND_INTERVAL_MS);
       await sendToVps(body, env);
       await updateLog(env, body.logId, "sent", null);
       message.ack();
