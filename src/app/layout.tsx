@@ -20,14 +20,14 @@ export const metadata: Metadata = {
     template: "%s | MailHub",
   },
   description:
-    "MailHub 邮件配置管理中心：管理员登录、发件通道、API Key、域名配置与发件记录。",
-  keywords: ["MailHub", "邮件API", "邮件配置", "Resend", "Transactional Email"],
+    "MailHub 邮件配置管理中心：管理员登录、自建发件服务器、API Key、域名配置与发件记录。",
+  keywords: ["MailHub", "邮件API", "邮件配置", "自建邮件服务器", "Transactional Email"],
   authors: [{ name: "MailHub" }],
   robots: { index: false, follow: false, noarchive: true },
   alternates: { canonical: "/" },
   openGraph: {
     title: "MailHub - 邮件配置管理中心",
-    description: "管理邮件发送通道与 API Key",
+    description: "管理自建邮件发送服务与 API Key",
     type: "website",
     locale: "zh_CN",
     url: canonicalUrl,
