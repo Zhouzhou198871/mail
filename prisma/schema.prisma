@@ -71,7 +71,6 @@ model EmailLog {
   status    String
   source    String   @default("panel")
   siteName  String?
-  providerMessageId String? @map("resendId")
   error     String?
   createdAt DateTime @default(now())
   @@index([userId])
