@@ -6,7 +6,8 @@ MailHub 是内部邮件配置管理面板，不是公共邮箱平台，也不开
 - 代码仓库：https://github.com/Zhouzhou198871/mail
 - 运行平台：Cloudflare Workers
 - 数据库：Cloudflare D1（SQLite）
-- 邮件通道：Resend
+- 邮件通道：Resend 主通道 + SendGrid 备用通道
+- 异步调度：Cloudflare Queues
 
 ## 功能
 
@@ -25,6 +26,10 @@ MailHub 是内部邮件配置管理面板，不是公共邮箱平台，也不开
 - D1 Binding：\`DB\`
 - 对外域名：\`mail.lynli.me\`
 - Worker 配置：\`wrangler.jsonc\`
+- Worker 入口：\`worker.ts\`（包装 OpenNext fetch，并处理 Queue Consumer）
+- Queue Producer Binding：\`EMAIL_QUEUE\`
+- 主队列：\`mailhub-email\`
+- 死信队列：\`mailhub-email-dead\`
 - SQL 迁移：\`migrations/\`
 
 \`mail.lynli.me\` 是管理面板 Web 域名，不是 SMTP/IMAP 邮件主机名。
@@ -82,6 +87,8 @@ Cloudflare Workers Builds 使用 GitHub main 分支自动构建：
 | \`PROVIDER_ENCRYPTION_KEY\` | AES-256-GCM 密钥（64 位十六进制） |
 | \`RESEND_API_KEY\` | Resend API Key |
 | \`RESEND_FROM_EMAIL\` | 已验证发件域名的发件地址 |
+| \`SENDGRID_API_KEY\` | SendGrid 备用 API Key（可选） |
+| \`SENDGRID_FROM_EMAIL\` | SendGrid 已验证发件地址（可选） |
 
 \`NEXTAUTH_URL\` 可作为普通运行时变量，固定为 \`https://mail.lynli.me\`。
 
@@ -111,16 +118,23 @@ Content-Type: application/json
 }
 ~~~
 
-成功返回 \`success: true\` 和邮件服务商消息 ID。限流返回 HTTP 429 与 \`Retry-After\`。
+请求通过鉴权后会推入 Cloudflare Queues，立即返回 HTTP \`202 Accepted\`、\`success: true\`、\`queued: true\` 和 MailHub 任务 ID。202 仅表示任务入队，不代表已经送达；最终状态在发件记录中查看。
 
 安全规则：
 
 - API Key 只保存 SHA-256 哈希，明文只在创建时显示一次。
-- 每个 API Key 每分钟最多 30 次；同一来源 IP 每分钟最多 120 次。
+- 每个 API Key 每分钟最多 600 次；同一来源 IP 每分钟最多 1200 次。
 - 未授权发送尝试按 IP 每分钟最多 60 次。
 - 单次请求体最多 256 KiB，HTML 正文最多 100 KiB。
 - 不要把 API Key 放入浏览器代码或客户端；由业务系统服务端调用。
 - 密钥泄露后立即吊销并重新生成。
+
+## Queue 重试与吞吐控制
+
+- 主队列 \`mailhub-email\`，最大重试 5 次，指数退避，失败后进入 \`mailhub-email-dead\` 死信队列。
+- Consumer 最大并发 1、每批最多 10 封，并在发送间隔增加 125ms，目标控制在当前 Resend 账户 10 req/s 限速以下。队列用于削峰，不会绕过供应商速率限制。
+- Resend 使用发件日志 ID 作为 \`Idempotency-Key\`，降低重试重复投递风险。
+- SendGrid 仅在 Resend 返回明确永久性 4xx 错误时作为备用；网络不确定、429 和 5xx 会优先重试 Resend。SendGrid 不提供同等原生幂等保证。
 
 ## 邮件送达配置
 

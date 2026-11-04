@@ -29,7 +29,7 @@ export function TemplateSendForm({ defaultTo }: { defaultTo: string }) {
         setResult({ ok: false, text: data.error || "发送失败，请检查收件邮箱和发件通道" });
         return;
       }
-      setResult({ ok: true, text: data.id ? `发送成功 · ${data.id}` : "发送成功" });
+      setResult({ ok: true, text: data.id ? `已进入发送队列 · ${data.id}` : "邮件已进入发送队列" });
       router.refresh();
     } catch {
       setResult({ ok: false, text: "网络连接异常，请重试" });
@@ -45,7 +45,7 @@ export function TemplateSendForm({ defaultTo }: { defaultTo: string }) {
     >
       <div>
         <h2 className="text-base font-semibold text-slate-900">一键发信</h2>
-        <p className="text-xs text-slate-500">选模版即可发送，无需编写 HTML</p>
+        <p className="text-xs text-slate-500">任务提交后由邮件队列异步发送</p>
       </div>
 
       <div>
@@ -92,7 +92,7 @@ export function TemplateSendForm({ defaultTo }: { defaultTo: string }) {
 
       <button type="submit" disabled={loading || !to.trim() || !selected} aria-busy={loading} className="btn-primary w-full py-3">
         {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
-        {loading ? "邮件发送中..." : "一键发送"}
+        {loading ? "正在提交队列..." : "提交发送任务"}
       </button>
 
       {result && (

@@ -49,10 +49,10 @@ export function SettingsForm({
       const res = await fetch("/api/user/test-email", { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
-        setMessage({ type: "err", text: data.error || "发送失败，请重试" });
+        setMessage({ type: "err", text: data.error || "提交失败，请重试" });
         return;
       }
-      setMessage({ type: "ok", text: `测试邮件已发送至 ${data.to}` });
+      setMessage({ type: "ok", text: `测试邮件已进入发送队列，收件人：${data.to}` });
     } catch {
       setMessage({ type: "err", text: "网络连接异常，请重试" });
     } finally {

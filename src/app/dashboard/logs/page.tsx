@@ -17,7 +17,7 @@ export default async function LogsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">发件</h1>
-        <p className="mt-1 text-sm text-slate-500">模版一键发送 · 记录即时更新</p>
+        <p className="mt-1 text-sm text-slate-500">邮件进入队列后异步发送 · 状态自动更新</p>
       </div>
 
       <TemplateSendForm defaultTo={session.user.email || ""} />
@@ -44,7 +44,10 @@ export default async function LogsPage() {
                 </td>
               </tr>
             )}
-            {logs.map((log) => (
+            {logs.map((log) => {
+              const queued = log.status === "queued" || log.status === "sending";
+              const sent = log.status === "sent";
+              return (
               <tr key={log.id} className="border-b border-slate-50 last:border-0">
                 <td className="px-3 py-3 text-slate-800">{log.to}</td>
                 <td className="max-w-[120px] truncate px-3 py-3 text-slate-700">
@@ -58,19 +61,22 @@ export default async function LogsPage() {
                 <td className="px-3 py-3">
                   <span
                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                      log.status === "sent"
+                      sent
                         ? "bg-emerald-50 text-emerald-700"
-                        : "bg-rose-50 text-rose-700"
+                        : queued
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-rose-50 text-rose-700"
                     }`}
                   >
-                    {log.status === "sent" ? "成功" : "失败"}
+                    {sent ? "已发送" : queued ? "排队中" : "失败"}
                   </span>
                 </td>
                 <td className="hidden px-4 py-3 text-slate-500 sm:table-cell">
                   {log.createdAt.toLocaleString("zh-CN")}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

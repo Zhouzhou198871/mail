@@ -31,7 +31,7 @@ export function ComposeForm({ defaultTo }: { defaultTo: string }) {
       }
       setResult({
         ok: true,
-        text: data.id ? `发送成功，编号：${data.id}` : "发送成功",
+        text: data.id ? `已进入发送队列 · 任务编号：${data.id}` : "邮件已进入发送队列",
       });
       router.refresh();
     } catch {
@@ -48,7 +48,7 @@ export function ComposeForm({ defaultTo }: { defaultTo: string }) {
     >
       <div>
         <h2 className="text-base font-semibold text-slate-900">实时发信</h2>
-        <p className="text-xs text-slate-500">发送结果会写入发件日志</p>
+        <p className="text-xs text-slate-500">任务提交后由邮件队列异步发送，状态记录在发件日志</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -98,8 +98,8 @@ export function ComposeForm({ defaultTo }: { defaultTo: string }) {
         className="btn-primary w-full py-3"
       >
         {loading ? (
-          <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />邮件发送中...</>
-        ) : "立即发送"}
+          <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />正在提交队列...</>
+        ) : "提交发送任务"}
       </button>
 
       {result && (
