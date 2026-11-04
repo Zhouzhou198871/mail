@@ -9,6 +9,13 @@ const bodySchema = z.object({
   templateId: z.string().min(1).optional(),
   subject: z.string().trim().min(1).max(200).optional(),
   html: z.string().min(1).max(100_000).optional(),
+  attachments: z.array(z.object({
+  filename: z.string().min(1).max(255),
+  contentBase64: z.string().min(1).max(100_000),
+  contentType: z.string().max(128).optional(),
+  disposition: z.enum(["attachment", "inline"]).optional(),
+  cid: z.string().max(255).optional(),
+})).max(10).optional(),
 }).superRefine((value, ctx) => {
   if (value.templateId) return;
   if (!value.subject || !value.html) ctx.addIssue({
@@ -49,6 +56,7 @@ export async function POST(request: Request) {
       to: parsed.data.to,
       subject,
       html,
+      attachments: parsed.data.attachments,
       source: "panel",
       siteName: "管理面板",
     });
