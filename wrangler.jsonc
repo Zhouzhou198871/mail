@@ -1,4 +1,8 @@
 {
+  "vars": {
+    "AUTH_URL": "https://mail.lynli.me",
+    "NEXTAUTH_URL": "https://mail.lynli.me"
+  },
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mailhub",
   "main": "./worker.ts",
