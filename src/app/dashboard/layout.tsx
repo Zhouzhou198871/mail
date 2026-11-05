@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
+import { prisma } from "@/lib/prisma";
 
 const nav = [
   { href: "/dashboard", label: "概览" },
