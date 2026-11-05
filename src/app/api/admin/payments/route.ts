@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getPayAdminContext } from "@/lib/pay-admin";
 
-export const runtime = "edge";
 
 const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("freeze_merchant"), merchantId: z.string().min(1) }),
