@@ -102,19 +102,33 @@ export function PayAdminClient() {
   const pendingRequests = useMemo(() => data.requests.filter(x => x.status === "pending"), [data.requests]);
 
   return (
-    <section className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-2 shadow-sm">
-        <nav className="flex flex-wrap gap-1" aria-label="晴天支付管理">
+    <section className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+        <div className="px-3 pb-3 pt-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-sky-600">QINGTIAN PAY</p>
+          <h2 className="mt-1 text-sm font-bold text-slate-900">支付管理</h2>
+          <p className="mt-1 text-xs text-slate-400">统一管理商户与资金</p>
+        </div>
+        <div className="mb-2 px-3 text-[11px] font-semibold text-slate-400">业务管理</div>
+        <nav className="space-y-1" aria-label="晴天支付管理">
           {tabs.map(item => (
-            <button key={item.id} onClick={() => setTab(item.id)} className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${tab === item.id ? "bg-sky-500 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"}`}>
-              {item.label}
-              {item.id === "withdrawals" && pendingWithdrawals.length > 0 ? ` · ${pendingWithdrawals.length}` : ""}
-              {item.id === "requests" && pendingRequests.length > 0 ? ` · ${pendingRequests.length}` : ""}
+            <button key={item.id} onClick={() => setTab(item.id)} className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition ${tab === item.id ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100" : "text-slate-600 hover:bg-slate-50"}`}>
+              <span>{item.label}</span>
+              <span className="flex items-center gap-2">
+                {item.id === "withdrawals" && pendingWithdrawals.length > 0 ? <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-700">{pendingWithdrawals.length}</span> : null}
+                {item.id === "requests" && pendingRequests.length > 0 ? <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-700">{pendingRequests.length}</span> : null}
+                <span aria-hidden className="text-slate-300">›</span>
+              </span>
             </button>
           ))}
         </nav>
-        <button className="btn-secondary !px-3 !py-2" onClick={() => void load()} disabled={loading}>{loading ? "刷新中…" : "刷新数据"}</button>
-      </div>
+      </aside>
+
+      <div className="min-w-0 space-y-4">
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+          <div><p className="text-xs text-slate-400">晴天支付 / 支付管理</p><h2 className="mt-0.5 font-semibold text-slate-900">{tabs.find(item => item.id === tab)?.label}</h2></div>
+          <button className="btn-secondary !px-3 !py-2" onClick={() => void load()} disabled={loading}>{loading ? "刷新中…" : "刷新数据"}</button>
+        </div>
 
       {message && <p role="status" className="rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-sm text-sky-800">{message}</p>}
       {loading ? <div className="rounded-2xl bg-white p-12 text-center text-sm text-slate-500">正在读取支付管理数据…</div> : (
@@ -186,6 +200,7 @@ export function PayAdminClient() {
           </div>}
         </>
       )}
+      </div>
     </section>
   );
 }
