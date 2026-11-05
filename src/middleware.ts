@@ -8,17 +8,29 @@ function applySecurityHeaders(response: NextResponse, pathname: string) {
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   response.headers.set("Strict-Transport-Security", "max-age=31536000");
   response.headers.set("X-DNS-Prefetch-Control", "off");
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin") || pathname.startsWith("/api/")) {
+
+  if (
+    pathname.startsWith("/dashboard") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/") ||
+    pathname.startsWith("/api/")
+  ) {
     response.headers.set("Cache-Control", "no-store, max-age=0");
     response.headers.set("Pragma", "no-cache");
   }
+
   return response;
 }
 
+// Auth.js validates the signed session cookie. No D1 Admin-table lookup is
+// performed by middleware; GitHub authorization is enforced in src/auth.ts.
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const { pathname } = req.nextUrl;
-  const isProtectedPage = pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
+  const isProtectedPage =
+    pathname.startsWith("/dashboard") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/");
   const isProtectedApi =
     pathname.startsWith("/api/dashboard") ||
     pathname.startsWith("/api/admin") ||
@@ -33,10 +45,12 @@ export default auth((req) => {
         pathname
       );
     }
+
     const loginUrl = new URL("/login", req.nextUrl.origin);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return applySecurityHeaders(NextResponse.redirect(loginUrl), pathname);
   }
+
   return applySecurityHeaders(NextResponse.next(), pathname);
 });
 
