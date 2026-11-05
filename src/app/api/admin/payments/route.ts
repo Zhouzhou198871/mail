@@ -143,11 +143,12 @@ export async function POST(request: Request) {
       const nextStatus = action.action === "approve_api_access" ? "approved" : "rejected";
       const result = await db.prepare(`
         UPDATE api_access_requests
-        SET status = ?, reviewed_at = ?, review_note = ?
+        SET status = ?, reviewed_at = ?, reviewed_by = ?, review_note = ?
         WHERE id = ? AND status = 'pending'
       `).bind(
         nextStatus,
         Math.floor(Date.now() / 1000),
+        context.userId,
         `由 MailHub 管理员 ${admin.email} 审批`,
         action.requestId
       ).run();
@@ -161,6 +162,28 @@ export async function POST(request: Request) {
           SET api_access_granted = 1
           WHERE id = (SELECT merchant_id FROM api_access_requests WHERE id = ?)
         `).bind(action.requestId).run();
+      }
+
+      const ticket = await db.prepare(
+        "SELECT ticket_id FROM api_access_requests WHERE id = ?"
+      ).bind(action.requestId).all<{ ticket_id: string }>();
+      const ticketId = ticket.results[0]?.ticket_id;
+      if (ticketId) {
+        const resultMessage = nextStatus === "approved"
+          ? "管理员已同意 API 调用权限申请，商户 API 权限已开通。"
+          : "管理员已拒绝本次 API 调用权限申请。";
+        await db.prepare(`
+          INSERT INTO chat_messages
+            (id, ticket_id, sender_user_id, sender_role, message_type, content, metadata_json, created_at)
+          VALUES (?, ?, NULL, 'system', 'approval_result', ?, '{}', ?)
+        `).bind(
+          crypto.randomUUID(),
+          ticketId,
+          resultMessage,
+          Math.floor(Date.now() / 1000)
+        ).run();
+        await db.prepare("UPDATE support_tickets SET status = 'closed', updated_at = ? WHERE id = ?")
+          .bind(Math.floor(Date.now() / 1000), ticketId).run();
       }
     }
 
