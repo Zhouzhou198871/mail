@@ -16,7 +16,7 @@ type Withdrawal = {
   id: string; request_no: string; user_id: string; amount_micro: number; fee_micro: number;
   currency: string; destination_masked: string | null; status: string; requested_at: number;
   reviewed_at: number | null; payout_reference: string | null; withdraw_type: string;
-  bank_account_info: string; payout_amount_micro: number; payout_amount_cents: number;
+  bank_account_info: string; payout_amount_micro: number; payout_amount_cents: number; fee_amount: number;
   admin_note: string; user_email: string | null; merchant_no: string | null; site_name: string | null;
 };
 type AccessRequest = {
