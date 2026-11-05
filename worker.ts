@@ -5,6 +5,7 @@ import { handleEmailQueue } from "./src/lib/email-queue-consumer";
 interface D1Statement {
   bind(...values: unknown[]): D1Statement;
   first<T = Record<string, unknown>>(): Promise<T | null>;
+  all<T = Record<string, unknown>>(): Promise<{ results: T[]; success: boolean }>;
   run(): Promise<unknown>;
 }
 interface D1Database { prepare(sql: string): D1Statement; }
@@ -30,6 +31,7 @@ interface QueueMessage<T> {
 interface QueueBatch<T> { queue: string; messages: QueueMessage<T>[]; }
 interface WorkerEnv {
   DB: D1Database;
+  PAY_DB: D1Database;
   VPS_MAIL_API_URL?: string;
   VPS_MAIL_API_KEY?: string;
   VPS_MAIL_FROM_EMAIL?: string;
