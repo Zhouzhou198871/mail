@@ -21,6 +21,12 @@ export default async function DashboardLayout({
   if (!session?.user) {
     redirect("/login");
   }
+  const isAdmin = session.user.email
+    ? !!(await prisma.admin.findUnique({
+        where: { email: session.user.email.toLowerCase() },
+        select: { id: true },
+      }))
+    : false;
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -48,6 +54,14 @@ export default async function DashboardLayout({
                 {item.label}
               </Link>
             ))}
+            {isAdmin && (
+              <Link
+                href="/admin/payments"
+                className="rounded-xl px-3.5 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-50"
+              >
+                晴天支付管理
+              </Link>
+            )}
           </nav>
         </div>
 
