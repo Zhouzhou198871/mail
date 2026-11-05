@@ -64,9 +64,16 @@ export async function ensureBootstrapAdmins() {
 }
 
 export async function verifyAdminLogin(email: string, password: string) {
-  await ensureBootstrapAdmins();
   const normalized = email.toLowerCase().trim();
-  const admin = await prisma.admin.findUnique({ where: { email: normalized } });
+
+  // Existing administrator records must remain usable even when the one-time
+  // bootstrap secret is no longer configured in the Worker environment.
+  let admin = await prisma.admin.findUnique({ where: { email: normalized } });
+  if (!admin) {
+    await ensureBootstrapAdmins();
+    admin = await prisma.admin.findUnique({ where: { email: normalized } });
+  }
+
   if (!admin || !verifyPassword(password, admin.passwordHash)) return null;
   return admin;
 }
