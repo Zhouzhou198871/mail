@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { PayAdminClient } from "@/app/admin/payments/pay-admin-client";
+import { BrandLogo } from "@/components/brand-logo";
 
 const mailNav = [
   { href: "/dashboard", label: "概览" },
@@ -25,13 +26,7 @@ export function DashboardShell({
     <div className="min-h-screen bg-slate-100">
       <div className="mx-auto max-w-5xl px-3 py-4 sm:px-6 sm:py-6">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-sm">
-          <Link href="/dashboard" onClick={() => setActiveView("mail")} className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-sky-600 text-lg font-black text-white">M</span>
-            <span>
-              <span className="block text-base font-bold tracking-tight text-slate-900">MailHub</span>
-              <span className="block text-[11px] text-slate-500">邮件调度中心</span>
-            </span>
-          </Link>
+          <span onClick={() => setActiveView("mail")}><BrandLogo href="/dashboard" size={40} subtitle="邮件调度中心" /></span>
 
           <Link
             href="/dashboard/account"
