@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import { PayAdminClient } from "@/app/admin/payments/pay-admin-client";
-import { BrandLogo } from "@/components/brand-logo";
 
 const mailNav = [
   { href: "/dashboard", label: "概览" },
@@ -26,7 +25,18 @@ export function DashboardShell({
     <div className="min-h-screen bg-slate-100">
       <div className="mx-auto max-w-5xl px-3 py-4 sm:px-6 sm:py-6">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-sm">
-          <span onClick={() => setActiveView("mail")}><BrandLogo href="/dashboard" size={40} subtitle="邮件调度中心" /></span>
+          <Link href="/dashboard" onClick={() => setActiveView("mail")} className="flex items-center gap-2.5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500 text-white shadow-sm" aria-hidden>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 6.5A1.5 1.5 0 0 1 5.5 5h13A1.5 1.5 0 0 1 20 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5v-11Z" stroke="currentColor" strokeWidth="1.8" />
+                <path d="m5 7 7 5 7-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+            <span>
+              <span className="block font-semibold leading-tight tracking-tight text-slate-900">MailHub</span>
+              <span className="block truncate text-[11px] leading-tight text-slate-500">邮件调度中心</span>
+            </span>
+          </Link>
 
           <Link
             href="/dashboard/account"
