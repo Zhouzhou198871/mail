@@ -2,7 +2,6 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/password";
 import { verifyAdminLogin } from "@/lib/admins";
 import { enforceRateLimit, getClientIp } from "@/lib/rate-limit";
 
@@ -25,8 +24,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       authorization: {
         params: { scope: "read:user user:email" },
       },
-      // Resolve the account's verified email even when the GitHub profile
-      // keeps its public email private. Only verified addresses are trusted.
+      // Only use an email GitHub confirms as verified. The primary verified
+      // address is preferred when the profile's public email is unavailable.
       profile: async (profile, tokens) => {
         let verifiedEmail: string | null = null;
 
@@ -64,6 +63,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
+    // Keep the existing credentials provider available for legacy account
+    // flows; the login page now exposes GitHub SSO as the admin entry point.
     Credentials({
       name: "credentials",
       credentials: {
@@ -97,21 +98,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider !== "github") return true;
 
       const email = user.email?.toLowerCase().trim();
-      if (!email || !GITHUB_ADMIN_EMAILS.has(email)) return false;
-
-      // The admin gate used by MailHub and the payment bridge checks this
-      // table after authentication. Create the allowlisted admin on first
-      // verified GitHub sign-in without replacing an existing password.
-      await prisma.admin.upsert({
-        where: { email },
-        create: {
-          email,
-          passwordHash: hashPassword(crypto.randomUUID()),
-        },
-        update: {},
-      });
-
-      return true;
+      // GitHub profile.email is populated only from GitHub's verified-email
+      // endpoint above. No Admin-table read or write is performed here.
+      return !!email && GITHUB_ADMIN_EMAILS.has(email);
     },
     async jwt({ token, user }) {
       if (user) token.id = user.id;
