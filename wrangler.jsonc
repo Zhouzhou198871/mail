@@ -5,12 +5,19 @@
   "compatibility_date": "2026-11-02",
   "compatibility_flags": ["nodejs_compat", "nodejs_compat_populate_process_env"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
-  "d1_databases": [{
-    "binding": "DB",
-    "database_name": "mailhub",
-    "database_id": "bbab792a-fd43-4740-97ed-dd4764e65b82",
-    "migrations_dir": "migrations"
-  }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mailhub",
+      "database_id": "bbab792a-fd43-4740-97ed-dd4764e65b82",
+      "migrations_dir": "migrations"
+    },
+    {
+      "binding": "PAY_DB",
+      "database_name": "qingtian-pay-auth",
+      "database_id": "0c6fa7fe-2eac-41fb-9ebb-3d51c1c897c5"
+    }
+  ],
   "queues": {
     "producers": [{ "binding": "EMAIL_QUEUE", "queue": "mailhub-email" }],
     "consumers": [
