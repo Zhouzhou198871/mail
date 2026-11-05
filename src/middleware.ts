@@ -8,7 +8,7 @@ function applySecurityHeaders(response: NextResponse, pathname: string) {
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   response.headers.set("Strict-Transport-Security", "max-age=31536000");
   response.headers.set("X-DNS-Prefetch-Control", "off");
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/api/")) {
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin") || pathname.startsWith("/api/")) {
     response.headers.set("Cache-Control", "no-store, max-age=0");
     response.headers.set("Pragma", "no-cache");
   }
@@ -18,7 +18,7 @@ function applySecurityHeaders(response: NextResponse, pathname: string) {
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const { pathname } = req.nextUrl;
-  const isProtectedPage = pathname.startsWith("/dashboard");
+  const isProtectedPage = pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
   const isProtectedApi =
     pathname.startsWith("/api/dashboard") ||
     pathname.startsWith("/api/admin") ||
