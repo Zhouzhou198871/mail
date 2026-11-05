@@ -57,7 +57,7 @@ export function DomainsClient({
         <p className="font-semibold text-slate-900">DNS / Cloudflare 配置说明</p>
         <ul className="mt-2 list-disc space-y-1 pl-5">
           <li>
-            Cloudflare：在 Netlify 环境变量配置{" "}
+            Cloudflare Worker：在 Worker Variables / Secrets 配置{" "}
             <code className="rounded bg-white px-1">CF_API_TOKEN</code>、{" "}
             <code className="rounded bg-white px-1">CF_ACCOUNT_ID</code>
           </li>
