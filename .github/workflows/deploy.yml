@@ -60,12 +60,16 @@ jobs:
           CLOUDFLARE_EMAIL: ${{ secrets.CF_EMAIL }}
           CLOUDFLARE_ACCOUNT_ID: "39fba5c84e10f7f4c1cceab74dd9ec95"
           AUTH_SECRET_VAL: ${{ secrets.AUTH_SECRET_VALUE }}
+          GITHUB_CLIENT_ID_VAL: ${{ secrets.GITHUB_CLIENT_ID }}
+          GITHUB_CLIENT_SECRET_VAL: ${{ secrets.GITHUB_CLIENT_SECRET }}
         run: |
           set -e
           test -n "$AUTH_SECRET_VAL" || (echo "::error::Missing repository secret AUTH_SECRET_VALUE."; exit 1)
+          test -n "$GITHUB_CLIENT_ID_VAL" || (echo "::error::Missing repository secret GITHUB_CLIENT_ID."; exit 1)
+          test -n "$GITHUB_CLIENT_SECRET_VAL" || (echo "::error::Missing repository secret GITHUB_CLIENT_SECRET."; exit 1)
           test -n "$CLOUDFLARE_API_KEY" || (echo "::error::Missing repository secret CF_API_KEY."; exit 1)
           test -n "$CLOUDFLARE_EMAIL" || (echo "::error::Missing repository secret CF_EMAIL."; exit 1)
-          node -e "console.log(JSON.stringify({AUTH_SECRET: process.env.AUTH_SECRET_VAL, NEXTAUTH_SECRET: process.env.AUTH_SECRET_VAL}))" | npx wrangler secret bulk --name mailhub
+          node -e "console.log(JSON.stringify({AUTH_SECRET: process.env.AUTH_SECRET_VAL, NEXTAUTH_SECRET: process.env.AUTH_SECRET_VAL, AUTH_GITHUB_ID: process.env.GITHUB_CLIENT_ID_VAL, AUTH_GITHUB_SECRET: process.env.GITHUB_CLIENT_SECRET_VAL, GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID_VAL, GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET_VAL}))" | npx wrangler secret bulk --name mailhub
 
       - name: Verify Auth Secrets
         env:
