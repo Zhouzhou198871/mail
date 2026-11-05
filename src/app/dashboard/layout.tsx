@@ -56,10 +56,10 @@ export default async function DashboardLayout({
             ))}
             {isAdmin && (
               <Link
-                href="/admin/payments"
+                href="/admin"
                 className="rounded-xl px-3.5 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-50"
               >
-                晴天支付管理
+                主管理面板
               </Link>
             )}
           </nav>
